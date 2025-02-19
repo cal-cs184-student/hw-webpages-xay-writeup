@@ -17,15 +17,13 @@
 	<body>
 		<div class="container">
 		<h1>CS184/284A Spring 2025 Homework 1 Write-Up</h1>
-		<div class="section-content">Names: Xay Hanmonty</div>
+		<div class="section-content">
+			<div>Names: Xay Hanmonty</div>
+			<div>Link to webpage: <a href="https://cal-cs184-student.github.io/hw-webpages-xay-writeup/">cal-cs184-student/hw-webpages-xay-writeup</a></div>
+			<div>Link to GitHub repository: <a href="https://github.com/cal-cs184-student/sp25-hw1-x.git">cal-cs184-student/sp25-hw1-x</a></div>
+		</div>
 
 		<br>
-
-		<div class="section-content">Link to webpage:<a href="https://cal-cs184-student.github.io/hw-webpages-xay-writeup/">cal-cs184-student/hw-webpages-xay-writeup</a></div>
-		
-		<br>
-
-		<div class="section-content">Link to GitHub repository:<a href="https://github.com/cal-cs184-student/sp25-hw1-x.git">cal-cs184-student/sp25-hw1-x</a></div>
 
 		<figure>
 			<img src="lion.jpg" alt="Lion" class="image-grid"/>
@@ -37,8 +35,7 @@
 		-->
 
 		<h2>Overview</h2>
-		<div class="section-content">Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.</div>
-
+		<div class="section-content">The implementation includes essential features for rendering basic geometric primitives: points, lines, and triangles. To achieve high-quality rendering, I incorporated supersampling for anti-aliasing, which helps reduce jagged edges by taking multiple samples per pixel. The rasterizer supports sophisticated rendering techniques such as color interpolation for smooth color transitions across triangles and texture mapping for applying images onto triangles. Through this assignment, I gained valuable insights into the inner workings of modern graphics systems, particularly how mathematical primitives are converted into actual pixels on the screen. The implementation challenged me to handle various edge cases and optimize the rasterization process while maintaining accuracy. Working on this rasterizer deepened my understanding of crucial computer graphics concepts like coordinate systems, barycentric coordinates, and interpolation techniques, providing a solid foundation in both theoretical and practical aspects of computer graphics programming. The assignment with low-level graphics operations has been invaluable in understanding how modern graphics hardware and software function together to create the visual experiences we see in applications and games.</div>
 		<h2>Task 1: Drawing Single-Color Triangles</h2>
 
 		<h2>Triangle Rasterization Algorithm Walkthrough</h2>
@@ -155,13 +152,13 @@
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 				<tr>
 					<td colspan="2" style="text-align: center;">
-					  <img src="test4Rate4.png" width="400px"/>
+					  <img src="test4Rate1.png" width="400px"/>
 					  <figcaption>Sample Rate 1</figcaption>
 					</td>
 				</tr>
 				<tr>
 					<td colspan="2" style="text-align: center;">
-					  <img src="test4Rate9.png" width="400px"/>
+					  <img src="test4Rate4.png" width="400px"/>
 					  <figcaption>Sample Rate 4</figcaption>
 					</td>
 				</tr>
@@ -196,8 +193,10 @@
 					applies the rotation to the current transformation matrix.
 					Modified the keyboard event handler to respond to 'Q' and 'E' keys:
 				</p>
-				<li>Press 'Q' to rotate the viewport counter-clockwise by 5 degrees</li>
-				<li>Press 'E' to rotate the viewport clockwise by 5 degrees</li>
+				<ul>
+					<li>Press 'Q' to rotate the viewport counter-clockwise by 5 degrees</li>
+					<li>Press 'E' to rotate the viewport clockwise by 5 degrees</li>
+				</ul>
 		<br/>
 
 		<div class="image-grid">
@@ -424,7 +423,9 @@ if (psm == P_NEAREST) {
 				</table>
 			</div>
 		</div>
-		- @Xay Hanmonty 
-	</div>
-	</body>
+		<footer class="section-content">
+			<p>@Xay Hanmonty</p>
+		</footer>
+		</div>
+		</body>
 </html>
