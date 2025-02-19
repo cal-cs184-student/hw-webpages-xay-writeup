@@ -1,45 +1,34 @@
 <html>
 	<head>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
-		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-		<style>
-			h1 {
-				text-align: center;
-			}
-
-			.container {
-				margin: 0 auto;
-				padding: 60px 20%;
-			}
-
-			figure {
-				text-align: center;
-			}
-
-			img {
-				display: inline-block;
-			}
-
-			body {
-				font-family: 'Inter', sans-serif;
-			}
-		</style>
+		<meta charset="UTF-8">
+		<title>CS 184 Rasterizer</title>
+		<link rel="stylesheet" href="styles.css">
+		<script type="text/x-mathjax-config">
+			MathJax.Hub.Config({
+				tex2jax: {
+					inlineMath: [['$', '$']],
+					displayMath: [['\\[', '\\]']],
+					processEscapes: true
+				}
+			});
+		</script>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 	</head>
 	<body>
 		<div class="container">
 		<h1>CS184/284A Spring 2025 Homework 1 Write-Up</h1>
-		<div style="text-align: center;">Names: </div>
+		<div class="section-content">Names: Xay Hanmonty</div>
 
 		<br>
 
-		Link to webpage:<a href="https://cal-cs184-student.github.io/hw-webpages-xay-writeup/">cal-cs184-student/hw-webpages-xay-writeup</a>
+		<div class="section-content">Link to webpage:<a href="https://cal-cs184-student.github.io/hw-webpages-xay-writeup/">cal-cs184-student/hw-webpages-xay-writeup</a></div>
 		
 		<br>
 
-		Link to GitHub repository:<a href="https://github.com/cal-cs184-student/sp25-hw1-x.git">cal-cs184-student/sp25-hw1-x</a>
+		<div class="section-content">Link to GitHub repository:<a href="https://github.com/cal-cs184-student/sp25-hw1-x.git">cal-cs184-student/sp25-hw1-x</a></div>
 
 		<figure>
-			<img src="lion.jpg" alt="Lion" style="width:80%"/>
+			<img src="lion.jpg" alt="Lion" class="image-grid"/>
 			<figcaption> </figcaption>
 		</figure>
 
@@ -48,35 +37,35 @@
 		-->
 
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
+		<div class="section-content">Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.</div>
 
 		<h2>Task 1: Drawing Single-Color Triangles</h2>
 
 		<h2>Triangle Rasterization Algorithm Walkthrough</h2>
 
-		<p>In this walkthrough, I'll explain how to rasterize a triangle efficiently. The goal is to determine which pixels should be filled while keeping the computation minimal.</p>
+		<p class="section-content">In this walkthrough, I'll explain how to rasterize a triangle efficiently. The goal is to determine which pixels should be filled while keeping the computation minimal.</p>
 		
-		<h3>Step 1: Bounding Box Computation</h3>
-		<p>First, I find the smallest and largest x and y coordinates of the triangle vertices. This helps define a rectangular bounding box that fully contains the triangle.</p>
+		<h3>Bounding Box Computation</h3>
+		<p class="section-content">First, I find the smallest and largest x and y coordinates of the triangle vertices. This helps define a rectangular bounding box that fully contains the triangle.</p>
 		<ul>
 		  <li>I use <code>floor()</code> to get the minimum x and y values.</li>
 		  <li>I use <code>ceil()</code> to get the maximum x and y values.</li>
 		  <li>To avoid drawing outside the screen, I clip these values to stay within the framebuffer limits.</li>
 		</ul>
 		
-		<h3>Step 2: Edge Function Setup</h3>
-		<p>Next, I compute the edge vectors for the triangle:</p>
+		<h3>Edge Function Setup</h3>
+		<p class="section-content">Next, I compute the edge vectors for the triangle:</p>
 		<ul>
 		  <li><code>(v1 - v0)</code>, <code>(v2 - v1)</code>, and <code>(v0 - v2)</code>.</li>
 		  <li>These vectors define the edges, which I use to check if a point is inside the triangle.</li>
 		</ul>
 		
-		<h3>Step 3: Pixel Testing</h3>
-		<p>Now, I test each pixel within the bounding box to see if it's inside the triangle.</p>
+		<h3>Pixel Testing</h3>
+		<p class="section-content">Now, I test each pixel within the bounding box to see if it's inside the triangle.</p>
 		<ul>
 		  <li>I check the center of each pixel at <code>(x + 0.5, y + 0.5)</code>.</li>
 		  <li>I use the edge function:
-			<pre><code>l = (px - x0) * e0y - (py - y0) * e0x;</code></pre>
+			<pre><code>l = (px - x0) * edge01_x - (py - y0) * edge01_y;</code></pre>
 		  </li>
 		  <li>This function tells me:
 			<ul>
@@ -85,20 +74,20 @@
 			  <li>If it's zero, the point is exactly on the edge.</li>
 			</ul>
 		  </li>
-		  <li>If all three edge functions return values with the same sign (either all ≥ 0 or all ≤ 0), the pixel is inside the triangle.</li>
+		  <li>If all three edge functions return values with the same sign, the pixel is inside the triangle.</li>
 		</ul>
 		
-		<h3>Step 4: Efficiency Considerations</h3>
-		<p>To make this algorithm as efficient as possible:</p>
+		<h3>Efficiency Considerations</h3>
+		<p class="section-content">To make this algorithm as efficient as possible:</p>
 		<ul>
 		  <li>I only check pixels inside the bounding box, avoiding unnecessary calculations.</li>
 		  <li>Each pixel only requires three edge function evaluations.</li>
 		  <li>Pixels outside the bounding box are never tested.</li>
 		</ul>
-		<p>To further optimize, I use incremental updates instead of recalculating values from scratch:</p>
+		<p class="section-content">To further optimize, I use incremental updates instead of recalculating values from scratch:</p>
 		<pre><code>
 		// Instead of computing l0 for each pixel:
-		l0 = (px - x0) * e0y - (py - y0) * e0x;
+		l0 = (px - x0) * edge01_x - (py - y0) * edge01_y;
 		
 		// I update incrementally:
 		l0 += l0_dx;  // Move horizontally
@@ -108,16 +97,16 @@
 		<h3>Optimizations for Better Performance</h3>
 		
 		<h3>Precomputed Increments</h3>
-		<p>By precomputing how much the edge function changes per step, I avoid unnecessary calculations inside the inner loop:</p>
+		<p class="section-content">By precomputing how much the edge function changes per step, I avoid unnecessary calculations inside the inner loop:</p>
 		<pre><code>
 		// Precompute how much l changes per pixel step
-		float l0_dx = e0y;
-		float l1_dx = e1y;
-		float l2_dx = e2y;
+		float l0_dx = edge01_y;
+		float l1_dx = edge02_y;
+		float l2_dx = edge12_y;
 		</code></pre>
 		
-		<h3>Row-Based Processing</h3>
-		<p>Instead of updating every pixel individually, I process rows at a time:</p>
+		<h3>Row Processing</h3>
+		<p class="section-content">Instead of updating every pixel individually, I process rows at a time:</p>
 		<pre><code>
 		// Store initial row value
 		float l0_row = initial_value;
@@ -127,12 +116,8 @@
 		</code></pre>
 		
 		<h3>Minimizing Operations</h3>
-		<ul>
-		  <li>I remove redundant calculations of pixel centers.</li>
-		  <li>I reduce floating-point operations inside loops.</li>
-		  <li>I use simple additions instead of multiplications wherever possible.</li>
-		</ul>
-		<div style="display: flex; flex-direction: column; align-items: center;">
+		<p class="section-content">I optimized the code by removing redundant calculations of pixel centers, reducing floating-point operations inside loops, and using simple additions instead of multiplications wherever possible.</p>
+		<div class="image-grid">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
 				<td style="text-align: center;">
@@ -158,33 +143,288 @@
 		</div>
 		
 		<h2>Task 2: Antialiasing by Supersampling</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p class="section-content">
+		This implementation lies in three main components which is modified rasterization pipeline, rasterization buffer management, and color resolution.
+		In sample buffer management, instead of storing a single color sample per pixel, I store sample_rate samples per pixel. The sample_buffer is sized at width × height × sample_rate, allowing for finer granularity.
+		For a sample rate of 4, each pixel is divided into a 2×2 grid of subpixels, while for a sample rate of 16, each pixel becomes a 4×4 grid. To accommodate this, I modify the rasterization pipeline by scaling coordinates in rasterize_triangle by squaring the sample_rate, ensuring that the bounding box and edge equations work in this higher-resolution space. Each subpixel is tested independently against the triangle’s edges, 
+		and if it falls inside, its color is stored in the sample buffer. Once rasterization is complete, I use the resolve_to_framebuffer function to average the subsamples, determining the final pixel color. For each pixel, I gather all subsamples and compute their average, resulting in a smoother final output. This supersampling technique significantly reduces aliasing artifacts
+		by capturing geometric detail at a resolution higher than the final display. For example, when a triangle edge cuts through a pixel, at sample_rate=1, the pixel is either fully inside or outside the triangle. At sample_rate=4, I can see 1, 2, 3, or 4 subpixels covered, while at sample_rate=16, there are up to 16 possible coverage values, leading to much smoother edges and improved anti-aliasing.
+		</p>
+
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+					<td colspan="2" style="text-align: center;">
+					  <img src="test4Rate4.png" width="400px"/>
+					  <figcaption>Sample Rate 1</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align: center;">
+					  <img src="test4Rate9.png" width="400px"/>
+					  <figcaption>Sample Rate 4</figcaption>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2" style="text-align: center;">
+					  <img src="test4Rate16.png" width="400px"/>
+					  <figcaption>Sample Rate 16</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
 
 		<h2>Task 3: Transforms</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+	
+		</p>
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr>
+					<td colspan="2" style="text-align: center;">
+					  <img src="robot.png" width="400px"/>
+					  <figcaption>basic/robot.svg</figcaption>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<br/>
+		<h3>Extra feature to the GUI</h3>
+				<p class="section-content">
+					Added a new rotate_view(float degrees) function that
+					gets the current view transformation matrix and
+					creates a rotation matrix for the specified angle then
+					applies the rotation to the current transformation matrix.
+					Modified the keyboard event handler to respond to 'Q' and 'E' keys:
+				</p>
+				<li>Press 'Q' to rotate the viewport counter-clockwise by 5 degrees</li>
+				<li>Press 'E' to rotate the viewport clockwise by 5 degrees</li>
+		<br/>
+
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<tr style="display: flex; justify-content: center; gap: 20px;">
+					<td style="text-align: center;">
+						<img src="Q.png" width="400px" />
+						<figcaption>Press Q</figcaption>
+					</td>
+					<td style="text-align: center;">
+						<img src="E.png" width="400px" />
+						<figcaption>Press E</figcaption>
+					</td>
+				</tr>
+			</table>
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+				<h3>Updated Version of robot.svg</h3>
+				<tr style="display: flex; justify-content: center; gap: 20px;">
+					<td style="text-align: center;">
+						<img src="my_robot.png" width="400px" />
+						<figcaption>my_robot.svg</figcaption>
+					</td>
+				</tr>
+			</table>
+			<p class="section-content">Added a 10-degree forward lean to the entire robot to give it a more energetic pose. 
+			   The legs are slightly angled (-5 and +5 degrees) in opposite directions and I also used bright, friendly colors.
+			   Additionally, the left arm is rotated 45 degrees upward in a classic waving gesture</p>
+		</div>
+		<br/>
 
 		<h2>Task 4: Barycentric coordinates</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p class="section-content">
+			Barycentric coordinates are a way to express the position of a point inside a triangle using a weighted combination of the triangle’s three vertices. Given a triangle with vertices A, B, and C, any point P inside the triangle can be represented as a weighted sum of these vertices:
+		</p>
 
+		<div class="equation-block">
+			\[ P = \alpha A + \beta B + \gamma C \]
+		</div>
+
+		<p class="section-content">
+		where α, β, γ are the barycentric coordinates. These weights determine how much influence each vertex has on the position of P.
+		</p>
+		<p class="section-content">In our code, we calculate these weights using areas:</p>
+		<div class="code-block">
+			<pre><code>float w0 = (x1 - px) * (y2 - py) - (x2 - px) * (y1 - py);  // Area of P12
+float w1 = (x2 - px) * (y0 - py) - (x0 - px) * (y2 - py);  // Area of P20
+float w2 = (x0 - px) * (y1 - py) - (x1 - px) * (y0 - py);  // Area of P01</code></pre>
+		</div>
+		<p class="section-content">
+			Each barycentric weight is proportional to the area of the sub-triangle formed by the point and the opposite edge of the main triangle. This concept is demonstrated in the color wheel images, where different colors emerge based on the distribution of these weights. Pure Red appears where w₀ = 1 (while the other weights are 0), Pure Green where w₁ = 1, and Pure Blue where w₂ = 1.
+		</p>
+		<div class="image-grid" style="display: flex; justify-content: center; gap: 20px; align-items: start; margin: 20px 0;">
+			<div class="image-container" style="flex: 1; max-width: 400px;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="test7one.png" width="100%"/>
+							<figcaption>First Image: test7.svg</figcaption>
+						</td>
+					</tr>
+				</table>
+				<table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 20px;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="test7two.png" width="100%"/>
+							<figcaption>Second Image: test7.svg</figcaption>
+						</td>
+					</tr>
+				</table>
+			</div>
+			<br/><br/>
+			<div class="image-container" style="flex: 1; padding: 5px;">
+				<br/><br/><br/>
+				<p class="section-content">
+					The color wheels are actually made up of many triangles, and within each triangle, barycentric coordinates are used to smoothly interpolate between the colors at its vertices. This creates the continuous rainbow effect we see, where each point's color is a weighted average of its triangle's vertex colors based on its barycentric coordinates.
+				</p>
+				<br/><br/><br/><br/><br/><br/><br/><br/><br/>
+				<p class="section-content">
+					The difference between the two images shows the impact of the number of triangles used - Image 2 uses more triangles for a smoother appearance, while Image 1 shows more distinct triangular segments. This demonstrates how barycentric interpolation works within each individual triangle to create smooth color transitions.
+				</p>
+			</div>
+		</div>
+		<br/>
+		
 		<h2>Task 5: "Pixel sampling" for texture mapping</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p class="section-content">
+			Pixel sampling is the process of determining what color to assign to a pixel when mapping a texture onto a surface. So, when we're rendering a textured triangle,each pixel needs to Sample
+			the texture at a specific UV coordinates to determine its color.
+		</p>
+		<p class="section-content">
+			First of all, I calculate the texture sample using barycentric coordinates and then use one of the two sampling methods to get the color.
+		</p>
+		<div class="code-block">
+			<pre><code>float u = u0 * w0 + u1 * w1 + u2 * w2;
+float v = v0 * w0 + v1 * w1 + v2 * w2;</code></pre>
+		</div>
+		<div class="code-block">
+			<pre><code>
+// Sample the texture 
+if (psm == P_NEAREST) {
+	color = tex.sample_nearest(Vector2D(u, v), 0);
+} else { // P_LINEAR
+	color = tex.sample_bilinear(Vector2D(u, v), 0);
+}
+</code></pre>
+		</div>
+		<p class="section-content">
+			Here are the differences that I found between nearest and linear sampling:
+			<ul>
+				<li>When the texture is smaller than the screen area, nearest neighbor will show clear blockiness</li>
+				<li>Nearest sampling is faster, but may result in color artifacts at texture edges.</li>
+				<li>During animation or camera movement, nearest neighbor can cause temporal aliasing</li>
+				<li>Linear sampling is smoother, but may result in color bleeding at texture edges.</li>
+				<li>Gradual color changes will look notably smoother with bilinear filtering.</li>
+			</ul>
+		</p>
+		<div class="image-grid" style="display: flex; justify-content: center; gap: 20px; align-items: start; margin: 20px 0;">
+			<div class="image-container" style="flex: 1; max-width: 400px;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="nearest1px.png" width="100%"/>
+							<figcaption><b>Nearest sampling at 1 sample per pixel</b></figcaption>
+						</td>
+					</tr>
+				</table>
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="bilinear1px.png" width="100%"/>
+							<figcaption><b>Bilinear sampling at 1 sample per pixel</b></figcaption>
+						</td>
+					</tr>
+				</table>
+				<table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 20px;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="nearest16px.png" width="100%"/>
+							<figcaption><b>Nearest sampling at 16 sample per pixel</b></figcaption>
+						</td>
+					</tr>
+				</table>
+				<table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 20px;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="bilinear16px.png" width="100%"/>
+							<figcaption><b>Bilinear sampling at 16 sample per pixel</b></figcaption>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+		<p class="section-content">
+			<b>Thus, when deciding which sampling method to use for texture mapping, it is usually necessary to consider the following factors:</b>
+			<ul>
+				<li>Performance requirements (nearest is faster)</li>
+				<li>Visual quality needs (bilinear is smoother)</li>
+				<li>Artistic intent (sometimes pixelation is desired, like in retro-style games)</li>
+			</ul>
+		</p>
+		<br/>
 
 		<h2>Task 6: "Level Sampling" with mipmaps for texture mapping</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>(Optional) Task 7: Extra Credit - Draw Something Creative!</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
-			</li>
-		</ul>
+		<p class="section-content">
+			Level Sampling is a technique used to reduce aliasing artifacts in texture mapping by utilizing pre-computed, downsampled versions of the texture, known as mipmaps. 
+			This helps achieve smoother rendering at different viewing distances.
+		</p>
+		
+		<p class="section-content">
+			We use get_level to determine the appropriate mipmap level, the algorithm calculates how quickly texture coordinates change between adjacent pixels using derivatives 
+			(<code>du/dx</code>, <code>dv/dx</code>) and (<code>du/dy</code>, <code>dv/dy</code>). These changes are then scaled by the texture dimensions to obtain actual pixel-space rates of change. 
+			The level is computed as:
+		</p>
+		
+		<pre>
+		L = max(√(du/dx² + dv/dx²), √(du/dy² + dv/dy²))
+		</pre>
+		
+		<p class="section-content">
+			The appropriate mipmap level is selected using <strong>log₂(L)</strong>.
+		</p>
+		
+		<p class="section-content">
+			Different methods are used to select texture levels:
+			<ul>
+				<li><strong>L_ZERO:</strong> Always uses the original texture (level 0).</li>
+				<li><strong>L_NEAREST:</strong> Rounds the computed level to the nearest integer.</li>
+				<li><strong>L_LINEAR:</strong> Interpolates between two adjacent mipmap levels for smoother transitions.</li>
+			</ul>
+		</p>
+		<div class="image-grid" style="display: flex; justify-content: center; gap: 20px; align-items: start; margin: 20px 0;">
+			<div class="image-container" style="flex: 1; max-width: 400px;">
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="L_ZERO_P_NEAREST.png" width="100%"/>
+							<figcaption><b>L_ZERO + P_NEAREST</b></figcaption>
+						</td>
+					</tr>
+				</table>
+				<table style="width: 100%; text-align: center; border-collapse: collapse;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="L_ZERO_P_LINEAR.png" width="100%"/>
+							<figcaption><b>L_ZERO + P_LINEAR</b></figcaption>
+						</td>
+					</tr>
+				</table>
+				<table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 20px;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="L_NEAREST_P_NEAREST.png" width="100%"/>
+							<figcaption><b>L_NEAREST + P_NEAREST</b></figcaption>
+						</td>
+					</tr>
+				</table>
+				<table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 20px;">
+					<tr>
+						<td style="text-align: center;">
+							<img src="L_NEAREST_P_LINEAR.png" width="100%"/>
+							<figcaption><b>L_NEAREST + P_LINEAR</b></figcaption>
+						</td>
+					</tr>
+				</table>
+			</div>
 		</div>
+		- @Xay Hanmonty 
+	</div>
 	</body>
 </html>
