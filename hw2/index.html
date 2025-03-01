@@ -28,15 +28,15 @@
 	<body>
 		<div class="container">
 		<h1>CS184/284A Spring 2025 Homework 2 Write-Up</h1>
-		<div style="text-align: center;">Names: </div>
+		<div style="text-align: center;">Names: Xay Hanmonty </div>
 
 		<br>
 
-		Link to webpage: (TODO) <a href="https://cs184.eecs.berkeley.edu/sp25">cs184.eecs.berkeley.edu/sp25</a>
+		Link to webpage:<a href="https://cal-cs184-student.github.io/hw-webpages-xay-writeup/">cal-cs184-student/hw-webpages-xay-writeup</a>
 
 		<br>
 		
-		Link to GitHub repository: (TODO) <a href="https://cs184.eecs.berkeley.edu/sp25">cs184.eecs.berkeley.edu/sp25</a>
+		Link to GitHub repository:<a href="https://github.com/cal-cs184-student/sp25-hw2-xhw2">cal-cs184-student/sp25-hw2-xhw2</a>
 
 		<figure>
 			<img src="teapot.png" alt="Teapot" style="width:50%"/>
@@ -48,34 +48,49 @@
 		-->
 
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
-
+		TODO
 		<h2>Section I: Bezier Curves and Surfaces</h2>
 
 		<h3>Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+		<p>In this part, I pretty much implemented the de Casteljau subdivision algorithm with the given formula. However, I encounter a problem with multiplication with <code>Vector2D.h</code> I fixed that by implementing the condition  to check if the size of the point is less than 2 then return either 0 or 1 accordingly.</p>
+		<p>Below, I show the screenshots of each step / level of the evaluation from the original control points down to the final evaluated point + a screenshot of a slightly different Bezier curve.</p>
 		<div style="display: flex; flex-direction: column; align-items: center;">
+			<td style="text-align: center;">
+				<img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/image.png" width="1000px"/>
+				<figcaption>Six control points</figcaption>
+			  </td>
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/1.png" width="600px"/>
 				</td>
 				<td style="text-align: center;">
-				  <img src="teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/2.png" width="650px"/>
 				</td>
 			  </tr>
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/3.png" width="600px"/>
 				</td>
 				<td style="text-align: center;">
-				  <img src="teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/4.png" width="650px"/>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/5.png" width="600px"/>
+				</td>
+				<td style="text-align: center;">
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/6.png" width="650px"/>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/7.png" width="600px"/>
+				</td>
+				<td style="text-align: center;">
+				  <img src="/Users/xayhanmonty/Desktop/CS184/hw-webpages-xay-writeup/hw2/assets/Q1/8.png" width="700px"/>
+				  <figcaption>Different <code>t</code> parameter</figcaption>
 				</td>
 			  </tr>
 			</table>
