@@ -40,7 +40,7 @@
 
 		<figure>
 			<img src="teapot.png" alt="Teapot" style="width:50%"/>
-			<figcaption>You can add images with captions!</figcaption>
+			<figcaption>The Amazing Tea Pot</figcaption>
 		</figure>
 
 		<!--
@@ -48,7 +48,7 @@
 		-->
 
 		<h2>Overview</h2>
-		TODO
+		
 		<h2>Section I: Bezier Curves and Surfaces</h2>
 
 		<h3>Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
@@ -193,66 +193,51 @@ Vector3D evaluate(double u, double v) {
 			  </tr>
 		</div>
 		<h3>Part 4: Edge flip</h3>
-		<p>In this part, I first contructs the Half Edge with the <code>Half-Edge using HalfedgeIter</code> and organized elements by type (halfedges, vertices, edges, faces). I also added a critical check to prevent flipping boundary edges whihc would create an invalid mesh.
-		I used the <code>setNeighbors</code> method to update all halfedge connections in a single call in order.   
-		</p>
-
+		<p> I first collected all necessary elements involved in the transformation. For example, the halfedges of the edge being flipped, the next halfedges in each face, the four vertices forming the two triangles, and the two faces sharing the edge. Before performing the flip, I checked if either face is a boundary loop, in which case the operation isn't allowed. The core of the implementation involves reassigning all pointers to reflect the new connectivity. 
+			I used the <code>setNeighbors()</code> method to efficiently update all halfedge pointers (next, twin, vertex, edge, face) in a single call. I name the variable like he, heTwin, and heNext made the code more readable whihc is really when it comes to debugging the code and helped visualize the mesh structure during the operation. 
+			From my previous commit, I found out that I've assigned the vertex to the new one, so with this implementaion I followed the requirement to only reassign pointers without adding or deleting any mesh elements, maintaining the exact same number of elements before and after the flip. By maintaining a consistent ordering when updating pointers, I make sure that the mesh remains valid and properly connected after the flip operation.</p>
 		<div class="code-section">
 			<pre><code class="cpp">
-EdgeIter HalfedgeMesh::flipEdge(EdgeIter e0) {
-  // This method should flip the given edge and return an iterator to the flipped edge.
-  HalfedgeIter h0 = e0->halfedge();
-  HalfedgeIter h1 = h0->next();
-  HalfedgeIter h2 = h1->next();
-  HalfedgeIter h3 = h0->twin();
-  HalfedgeIter h4 = h3->next();
-  HalfedgeIter h5 = h4->next();
-  HalfedgeIter h6 = h1->twin();
-  HalfedgeIter h7 = h2->twin();
-  HalfedgeIter h8 = h4->twin();
-  HalfedgeIter h9 = h5->twin();
+EdgeIter HalfedgeMesh::flipEdge( EdgeIter e0 )
+{   
+	// TODO Part 4.
+	// This method should flip the given edge and return an iterator to the flipped edge.
+	HalfedgeIter he = e0->halfedge();
+	HalfedgeIter heTwin = he->twin();
 
-  // Vertices
-  VertexIter v0 = h0->vertex();
-  VertexIter v1 = h3->vertex();
-  VertexIter v2 = h2->vertex();
-  VertexIter v3 = h5->vertex();
+	HalfedgeIter heNext = he->next();
+	HalfedgeIter heTwinNext = heTwin->next();        
+	HalfedgeIter heNextNext = heNext->next();
+	HalfedgeIter heTwinNextNext = heTwinNext->next();     
 
-  EdgeIter e1 = h1->edge();
-  EdgeIter e2 = h2->edge();
-  EdgeIter e3 = h4->edge();
-  EdgeIter e4 = h5->edge();
+	VertexIter vA = he->vertex();
+	VertexIter vB = heTwin->vertex();
+	VertexIter vC = heNextNext->vertex();
+	VertexIter vD = heTwinNextNext->vertex();
 
-  FaceIter f0 = h0->face();
-  FaceIter f1 = h3->face();
+	FaceIter faceA = he->face();
+	FaceIter faceB = heTwin->face();
 
-  // Check for boundary faces - cannot flip boundary edges
-  if (f0->isBoundary() || f1->isBoundary()) {
-    return e0;
-  }
-  
-  // Rewire halfedge connections
-  h0->setNeighbors(h5, h3, v3, e0, f0);
-  h3->setNeighbors(h2, h0, v2, e0, f1);
-  
-  h1->setNeighbors(h0, h6, v2, e1, f0);
-  h4->setNeighbors(h3, h8, v3, e3, f1);
-  
-  h2->setNeighbors(h1, h7, v0, e2, f0);
-  h5->setNeighbors(h4, h9, v1, e4, f1);
+	if (faceA->isBoundary() || faceB->isBoundary()) {
+	return e0;
+	}   
 
-  // Update vertex halfedge pointers
-  v0->halfedge() = h2;
-  v1->halfedge() = h5;
-  v2->halfedge() = h1;
-  v3->halfedge() = h4;
+	he->setNeighbors(heTwinNextNext, heTwin, vC, e0, faceA);
+	heNext->setNeighbors(he, heNext->twin(), vB, heNext->edge(), faceA);
+	heNextNext->setNeighbors(heTwinNext, heNextNext->twin(), vC, heNextNext->edge(), faceB);        
+	heTwin->setNeighbors(heNextNext, he, vD, e0, faceB);
+	heTwinNext->setNeighbors(heTwin, heTwinNext->twin(), vA, heTwinNext->edge(), faceB);
+	heTwinNextNext->setNeighbors(heNext, heTwinNextNext->twin(), vD, heTwinNextNext->edge(), faceA);
 
-  // Update face halfedge pointers
-  f0->halfedge() = h0;
-  f1->halfedge() = h3;
+	faceA->halfedge() = he;
+	faceB->halfedge() = heTwin;
+	
+	vA->halfedge() = heTwinNext;
+	vB->halfedge() = heNext;
+	vC->halfedge() = he;
+	vD->halfedge() = heTwin;
 
-  e0->halfedge() = h0;
-  return e0;
+	return e0;
 }
 			</code></pre>
 		</div>
@@ -276,12 +261,12 @@ EdgeIter HalfedgeMesh::flipEdge(EdgeIter e0) {
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<tr>
 				<td style="text-align: center;">
-				  <img src="../hw2/assets/Q4/Screenshot 2025-03-02 at 8.53.29 PM.png" width="600px"/>
+				  <img src="../hw2/assets/Q4/image.png" width="600px"/>
 				  <figcaption>No flip</figcaption>
 				</td>
 				<br>
 				<td style="text-align: center;">
-				  <img src="../hw2/assets/Q4/Screenshot 2025-03-02 at 8.53.55 PM.png" width="600px"/>
+				  <img src="../hw2/assets/Q4/image copy.png" width="600px"/>
 				  <figcaption>With flip</figcaption>
 				</td>
 			  </tr>
@@ -291,112 +276,127 @@ EdgeIter HalfedgeMesh::flipEdge(EdgeIter e0) {
 		next part is I create a new vertex at the midpont of the edge to be split by taking <code>v0->position</code> + <code>v1->position</code> / 2. Then I update the halfedge pointers for the new vertex and the faces connected to the edge by setting their halfedges to the new vertex. 
 		The most important implementation detail is that I need to update the halfedge pointers for the new vertex and the faces connected to the edge by setting their halfedges to the new vertex. </p>
 		<br>
-		<strong>Implementaion Details:</strong>
+		<strong>Boundary Edge</strong>
+		<p>For boundary edges, since it has only one adjacent face we would only need to split the interior face into two triangles. The boundary loop is preserved by inserting the new vertex into the boundary and connecting it appropriately. 
+			This requires creating four new halfedges, two new edges, and one new face. </p>
+		
+		<strong>Implementation Details for Boundary Edge:</strong>
 		<pre><code class="cpp">
-VertexIter HalfedgeMesh::splitEdge( EdgeIter e0 )
-{
-	// TODO Part 5.
-	// This method should split the given edge and return an iterator to the newly inserted vertex.
-	// The halfedge of this vertex should point along the edge that was split, rather than the new edges.
-	
-	HalfedgeIter h0 = e0->halfedge();
-	HalfedgeIter h3 = h0->twin();
-	
-	VertexIter v0 = h0->vertex();
-	VertexIter v1 = h3->vertex();
-	
-	FaceIter f0 = h0->face();
-	FaceIter f1 = h3->face();
-	
-	// Get the next halfedges around each face
-	HalfedgeIter h1 = h0->next();
-	HalfedgeIter h2 = h1->next();
-	HalfedgeIter h4 = h3->next();
-	HalfedgeIter h5 = h4->next();
-	
-	// Get the third vertex of each face
-	VertexIter v2 = h1->vertex();
-	VertexIter v3 = h4->vertex();
 
-	if (f0->isBoundary() || f1->isBoundary()) {
-	return VertexIter();
+if (e0->isBoundary()) {
+
+	HalfedgeIter hBoundary, innerH;
+	FaceIter fInterior;
+	
+	if (h0->face()->isBoundary()) {
+		hBoundary = h0;
+		innerH = hTwin;
+		fInterior = hTwin->face();
+	} else {
+		hBoundary = hTwin;
+		innerH = h0;
+		fInterior = h0->face();
 	}
+	
+	HalfedgeIter hNext = innerH->next();
+	HalfedgeIter hPrev = hNext->next();
+	VertexIter vOther = hPrev->vertex();
+	
+	HalfedgeIter hNewA = newHalfedge();
+	HalfedgeIter hNewB = newHalfedge();
+	HalfedgeIter hNewC = newHalfedge();
+	HalfedgeIter hNewBoundary = newHalfedge();
+	EdgeIter eNewA = newEdge();
+	EdgeIter eNewB = newEdge();
+	FaceIter fNew = newFace();
+	
+	// Set up the interior face connections
+	innerH->setNeighbors(hNewA, hNewBoundary, m, e0, fInterior);
+	hNext->setNeighbors(hNewB, hNext->twin(), innerH->twin()->vertex(), hNext->edge(), fNew);
+	hPrev->setNeighbors(innerH, hPrev->twin(), vOther, hPrev->edge(), fInterior);
+	hNewA->setNeighbors(hPrev, hNewB, vOther, eNewA, fInterior);
+	hNewB->setNeighbors(hNewC, hNewA, m, eNewA, fNew);
+	hNewC->setNeighbors(hNext, hBoundary, innerH->twin()->vertex(), eNewB, fNew);
+	
+	hNewBoundary->setNeighbors(hBoundary->next(), innerH, m, e0, hBoundary->face());
+	hBoundary->setNeighbors(hNewBoundary, hNewC, hBoundary->vertex(), eNewB, hBoundary->face());
+	
+	fInterior->halfedge() = innerH;
+	fNew->halfedge() = hNewB;
+	
+	vStart->halfedge() = (vStart == innerH->vertex()) ? hNext : hBoundary;
+	vOther->halfedge() = hPrev;
+	vEnd->halfedge() = (vEnd == innerH->vertex()) ? hNext : hBoundary;
+	m->halfedge() = innerH;
+	
+	e0->halfedge() = innerH;
+	eNewA->halfedge() = hNewB;
+	eNewB->halfedge() = hNewC;
+	
+} else {
+	HalfedgeIter h1 = h0;
+	HalfedgeIter t1 = hTwin;
+	HalfedgeIter h2 = h1->next();
+	HalfedgeIter t2 = t1->next();        
+	HalfedgeIter h3 = h2->next();
+	HalfedgeIter t3 = t2->next();        
+	VertexIter v0 = vStart;
+	VertexIter v2 = vEnd;
+	VertexIter v1 = h3->vertex();
+	VertexIter v3 = t3->vertex();
+	FaceIter f1 = h1->face();
+	FaceIter f2 = t1->face();
+	VertexIter v4 = m;
 
-	// New V
-	VertexIter v_new = newVertex();
-	v_new->position = (v0->position + v1->position) / 2.0;
-	
-	// Create new halfedges
-	HalfedgeIter h6 = newHalfedge();  // v_new -> v2
-	HalfedgeIter h7 = newHalfedge();  // v2 -> v_new
-	HalfedgeIter h8 = newHalfedge();  // v_new -> v3
-	HalfedgeIter h9 = newHalfedge();  // v3 -> v_new
-	
-	EdgeIter e1 = newEdge();  // v_new -> v2
-	EdgeIter e2 = newEdge();  // v_new -> v3
-	
-	// Update connectivity 
-	h0->vertex() = v0;       
-	h0->next() = h6;
-	h0->face() = f0;         
-	
-	h6->vertex() = v_new;
-	h6->next() = h2;
-	h6->twin() = h7;
-	h6->edge() = e1;
-	h6->face() = f0;
-	
-	h2->next() = h0;         
-	h2->face() = f0;        
-	
-	h3->vertex() = v_new;    
-	h3->next() = h4;        
-	h3->face() = f1;          
-	
-	h4->next() = h9;         
-	h4->face() = f1;        
-	
-	h9->vertex() = v3;
-	h9->next() = h3;
-	h9->twin() = h8;
-	h9->edge() = e2;
-	h9->face() = f1;
-	
-	h7->vertex() = v2;
-	h7->next() = h1;
-	h7->twin() = h6;
-	h7->edge() = e1;
-	h7->face() = f0;       
-	
-	h1->vertex() = v1;        
-	h1->next() = h7;
-	h1->face() = f0;        
-	
-	h8->vertex() = v_new;
-	h8->next() = h5;
-	h8->twin() = h9;
-	h8->edge() = e2;
-	h8->face() = f1;          
-	
-	h5->vertex() = v1;      
-	h5->next() = h8;
-	h5->face() = f1;     
-	
-	e0->halfedge() = h0;
-	e1->halfedge() = h6;
-	e2->halfedge() = h8;
-	
-	v0->halfedge() = h0;
-	v1->halfedge() = h1;
-	v_new->halfedge() = h3;  
-	
-	f0->halfedge() = h0;
-	f1->halfedge() = h3;
-	
-	return v_new;
+	HalfedgeIter h4 = newHalfedge();
+	HalfedgeIter h5 = newHalfedge();
+	HalfedgeIter h6 = newHalfedge();
+	HalfedgeIter t4 = newHalfedge();
+	HalfedgeIter t5 = newHalfedge();
+	HalfedgeIter t6 = newHalfedge();
+	EdgeIter e1 = newEdge();
+	EdgeIter e2 = newEdge();
+	EdgeIter e3 = newEdge();
+	FaceIter f3 = newFace();
+	FaceIter f4 = newFace();
+
+	h1->setNeighbors(h4, t6, v0, e0, f1);
+	h2->setNeighbors(h5, h2->twin(), v2, h2->edge(), f3);
+	h3->setNeighbors(h1, h3->twin(), v1, h3->edge(), f1);        
+	h4->setNeighbors(h3, h5, v4, e1, f1);        
+	h5->setNeighbors(h6, h4, v1, e1, f3);        
+	h6->setNeighbors(h2, t1, v4, e2, f3);
+
+	t1->setNeighbors(t4, h6, v2, e2, f2);
+	t2->setNeighbors(t5, t2->twin(), v0, t2->edge(), f4);
+	t3->setNeighbors(t1, t3->twin(), v3, t3->edge(), f2);        
+	t4->setNeighbors(t3, t5, v4, e3, f2);        
+	t5->setNeighbors(t6, t4, v3, e3, f4);        
+	t6->setNeighbors(t2, h1, v4, e0, f4);  
+
+	f1->halfedge() = h1;
+	f2->halfedge() = t1;
+	f3->halfedge() = h5;
+	f4->halfedge() = t5;
+
+	v0->halfedge() = t2;
+	v1->halfedge() = h3;
+	v2->halfedge() = h2;
+	v3->halfedge() = t3; 
+	v4->halfedge() = h6; 
+
+	e0->halfedge() = h1;       
+	e1->halfedge() = h5;       
+	e2->halfedge() = t1;       
+	e3->halfedge() = t5;
 }
 		</code></pre>
 		<br>
+		<strong>Debugging Details:</strong>
+		<p> 
+			I had to carefully think about the topology of the mesh and how the halfedge data structure represents boundary edges. The key challenge was understanding how to maintain the boundary loop while splitting the edge.
+			Some of the challenges I faced, is ensuring that all halfedges are properly connected in a cycle around each face, including the boundary face. I also making sure that each edge and vertex points to the correct halfedge after the split operation.
+		</p>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<tr>
 				<td style="text-align: center;">
@@ -405,156 +405,90 @@ VertexIter HalfedgeMesh::splitEdge( EdgeIter e0 )
 				</td>
 				<br>
 				<td style="text-align: center;">
-				  <img src="../hw2/assets/Q5/Screenshot 2025-03-03 at 4.16.26 PM.png" width="600px"/>
+				  <img src="../hw2/assets/Q5/Screenshot 2025-03-04 at 4.44.08 PM.png" width="600px"/>
 				  <figcaption>With splitEdge</figcaption>
 				</td>
 			  </tr>
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="../hw2/assets/Q5/Screenshot 2025-03-03 at 4.16.26 PM.png" width="600px"/>
+				  <img src="../hw2/assets/Q5/Screenshot 2025-03-03 at 4.15.59 PM.png" width="600px"/>
 				  <figcaption>Before Combination of flipEdge + splitEdge</figcaption>
 				</td>
 				<br>
 				<td style="text-align: center;">
-				  <img src="../hw2/assets/Q5/Screenshot 2025-03-03 at 4.16.58 PM.png" width="600px"/>
+				  <img src="../hw2/assets/Q5/image.png" width="600px"/>
 				  <figcaption>After Combination of flipEdge + splitEdge</figcaption>
 				</td>
 			  </tr>
 		</div>
-		<p></p>
 		<br>
 
 		<strong>Debugging:</strong>
 		<p>Compare to the previous part, I implemented this function like the way I would draw it out in paper and make the code follow that way which would be it easier to debug and for each step I would log out the current value on each line to make sure I'm on the right track</p>
-		<strong>Boundary Case:</strong>
-		<p>I start by first determine which face is the boundary face. I then create only two new halfedge instead of four with only split the non-boundary face, preserving the boundary. For the rest I keep maintaining the proper connectivity between the new vertex and both the boundary and non-boundary regions</p>
-	<code><pre>
-if (!f0->isBoundary() && !f1->isBoundary()) {
-	HalfedgeIter h6 = newHalfedge();  // v_new -> v2
-	HalfedgeIter h7 = newHalfedge();  // v2 -> v_new
-	HalfedgeIter h8 = newHalfedge();  // v_new -> v3
-	HalfedgeIter h9 = newHalfedge();  // v3 -> v_new
-	
-	EdgeIter e1 = newEdge();  // v_new -> v2
-	EdgeIter e2 = newEdge();  // v_new -> v3
-	
-	// Update connectivity 
-	h0->vertex() = v0;
-	h0->next() = h6;
-	h0->face() = f0;
-	
-	h6->vertex() = v_new;
-	h6->next() = h2;
-	h6->twin() = h7;
-	h6->edge() = e1;
-	h6->face() = f0;
-	
-	h2->next() = h0;
-	h2->face() = f0;
-	
-	h3->vertex() = v_new;
-	h3->next() = h4;
-	h3->face() = f1;
-	
-	h4->next() = h9;
-	h4->face() = f1;
-	
-	h9->vertex() = v3;
-	h9->next() = h3;
-	h9->twin() = h8;
-	h9->edge() = e2;
-	h9->face() = f1;
-	
-	h7->vertex() = v2;
-	h7->next() = h1;
-	h7->twin() = h6;
-	h7->edge() = e1;
-	h7->face() = f0;
-	
-	h1->vertex() = v1;
-	h1->next() = h7;
-	h1->face() = f0;
-	
-	h8->vertex() = v_new;
-	h8->next() = h5;
-	h8->twin() = h9;
-	h8->edge() = e2;
-	h8->face() = f1;
-	
-	h5->vertex() = v1;
-	h5->next() = h8;
-	h5->face() = f1;
-	
-	e0->halfedge() = h0;
-	e1->halfedge() = h6;
-	e2->halfedge() = h8;
-	
-	v0->halfedge() = h0;
-	v1->halfedge() = h1;
-	v_new->halfedge() = h3;
-	
-	f0->halfedge() = h0;
-	f1->halfedge() = h3;
-} else {
-	// Handle boundary case
-	FaceIter non_boundary_face;
-	HalfedgeIter boundary_he, non_boundary_he;
-	
-	// Determine face boundary
-	if (f0->isBoundary()) {
-		non_boundary_face = f1;
-		boundary_he = h0;
-		non_boundary_he = h3;
-	} else {
-		non_boundary_face = f0;
-		boundary_he = h3;
-		non_boundary_he = h0;
-	}
-	
-	HalfedgeIter h_new = newHalfedge();  
-	HalfedgeIter h_new_b = newHalfedge();
-	
-	EdgeIter e_new = newEdge();
-	
-	non_boundary_he->vertex() = v0;
-	non_boundary_he->next() = h_new;
-	
-	h_new->vertex() = v_new;
-	h_new->next() = non_boundary_he->next()->next();
-	h_new->twin() = h_new_b;
-	h_new->edge() = e_new;
-	h_new->face() = non_boundary_face;
-	
-	boundary_he->vertex() = v_new;
-	h_new_b->vertex() = v1;
-	h_new_b->next() = boundary_he;
-	h_new_b->twin() = h_new;
-	h_new_b->edge() = e_new;
-	h_new_b->face() = boundary_he->face();
-	
-	e0->halfedge() = non_boundary_he;
-	e_new->halfedge() = h_new;
-	
-	v_new->halfedge() = boundary_he;
-	
-	non_boundary_face->halfedge() = non_boundary_he;
-}
-
-return v_new;
-	</code></pre>
+	<br>
 		<h3>Part 6: Loop subdivision for mesh upsampling</h3>
-		<p>TODO </p>
+		<p> In this part, I implemented the loop subdivision by following a five-step approach mentioned in the code. First, I computed new positions for all existing vertices using the Loop subdivision rule, where each vertex's new position is a weighted average of its original position and its neighbors' positions.
+			Then I calculated new poistions for edge midpointsm using a weighted average of the the edge endpoints and opposite vertices. For each edge I used  the formula <code>3/8 * (A + B) + 1/8 * (C + D)</code> to determine where the new vertex should be place.
 
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
-			</li>
-		</ul>
+			After that, I collected all original edges into a vector to avoid iterating over newly created edges, then split each original edge using the splitEdge function. During this process, I marked new vertices and edges appropriately to distinguish between original and new elements. Fourth, I flipped any new edge that connected an old vertex with a new vertex, which is crucial for achieving the proper subdivision pattern.
+			During debugging, I found it helpful to visualize the mesh after each step, which revealed issues with edge marking and boundary handling. A key insight was ensuring proper handling of the isNew flag to correctly identify which edges to flip. I also discovered that collecting all original edges before splitting was essential to prevent infinite loops.
+		</p>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<tr>
+				<td style="text-align: center;">
+				  <img src="../hw2/assets/Q6/Screenshot 2025-03-04 at 9.13.27 PM.png" width="600px"/>
+				  <figcaption>Original</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw2/assets/Q6/Screenshot 2025-03-04 at 9.13.42 PM.png" width="600px"/>
+				  <figcaption>After First Loop subdivision</figcaption>
+				</td>
+				<br>
+				<td style="text-align: center;">
+				  <img src="../hw2/assets/Q6/Screenshot 2025-03-04 at 9.14.11 PM.png" width="600px"/>
+				  <figcaption>After Second Loop subdivision</figcaption>
+				</td>
+			  </tr>
+		</div>
+		<strong>Observation On Meshes</strong>
+		<p>
+			The observation on mesh according to the picture above, I see that loop subdivision has a notable smoothing effect on meshes. Where sharp corners and edges become progressively rounded with each subdivision iteration. This happend because the subdivision scheme inherently averages vertex positions with their neighbors, causing sharp features to be blended with surrounding geometry.
+			Another interesting observation is that Loop subdivision preserves the overall shape and volume of the mesh while increasing its smoothness. However, this can sometimes lead to shrinkage in certain areas, particularly in regions with high curvature. This effect becomes more pronounced with multiple subdivision iterations. When it comes to reduce the pre-splitting edges in area some edges, by 
+			adding more vertices along sharp edges before applying subdivision, this create a higher density of vertices that better preserve the original shape. This works because the subdivision algorithm has more points to work with, allowing it to maintain a closer approximation to the original sharp feature.
+		</p>
+		<br>
+		<strong>Cube:</strong>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<tr>
+				<td style="text-align: center;">
+				  <img src="../hw2/assets/Q6/Screenshot 2025-03-04 at 9.17.59 PM.png" width="600px"/>
+				  <figcaption>Original</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw2/assets/Q6/Screenshot 2025-03-04 at 9.18.10 PM.png" width="600px"/>
+				  <figcaption>Cube After First Loop subdivision</figcaption>
+				</td>
+				<br>
+				<td style="text-align: center;">
+				  <img src="../hw2/assets/Q6/Screenshot 2025-03-04 at 9.18.20 PM.png" width="600px"/>
+				  <figcaption>Cube After Second Loop subdivision</figcaption>
+				</td>
+				<td style="text-align: center;">
+					<img src="../hw2/assets/Q6/image copy.png" width="600px"/>
+					<figcaption>Cube After Loop subdivision + EdgeSplit in each face</figcaption>
+				  </td>
+			  </tr>
+		</div>
+		<p>When I apply Loop subdivision to a cube model, I notice an interesting asymmetry occur after multiple iterations. This happens because the initial triangulation of the cube isn’t symmetric. Each face of the cube is usually divided into two triangles by a diagonal edge, but these diagonals don’t follow a consistent pattern across all faces. As Loop subdivision creates new vertices at edge midpoints and connects them based on the existing topology, this asymmetric edge structure gets amplified with each iteration.
+			I can pre-process the cube with strategic edge flips and splits. One effective approach is to first split each face into four triangles by adding a vertex at the center and connecting it to the four corners. This creates a more symmetric initial triangulation. I can also split edges along the cube’s original edges to increase the density of vertices in these regions, which helps preserve the cube’s sharp features during subdivision.
+			With a symmetric starting point, loop subdivision applies its smoothing operations more uniformly across the entire model. This adding the vertices along the cube’s edges also helps maintain sharpness during subdivision by providing more points for the algorithm to work with. As a result, the cube retains its important geometric features while achieving a smoother, more consistent subdivision.
+		</p>
+
+
 		</div>
 	</body>
 </html>
