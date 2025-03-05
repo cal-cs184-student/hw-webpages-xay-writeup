@@ -23,6 +23,60 @@
 			body {
 				font-family: 'Inter', sans-serif;
 			}
+
+			p {
+				font-size: 1.1em;
+				line-height: 1.8;
+				color: #374151;
+				margin: 1.5em 0;
+				max-width: 80ch;
+				letter-spacing: 0.01em;
+			}
+
+			p code {
+				background: #f3f4f6;
+				padding: 0.2em 0.4em;
+				border-radius: 4px;
+				color: #dc2626;
+				font-size: 0.9em;
+			}
+
+			.highlight-box {
+				background: #f8fafc;
+				border-radius: 8px;
+				padding: 1.5em;
+				margin: 2em 0;
+				box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+			}
+
+			.implementation-note {
+				border-left: 4px solid #3b82f6;
+				background: #f0f9ff;
+				padding: 1.5em;
+				margin: 2em 0;
+				border-radius: 0 8px 8px 0;
+			}
+
+			.debug-note {
+				border-left: 4px solid #059669;
+				background: #ecfdf5;
+				padding: 1.5em;
+				margin: 2em 0;
+				border-radius: 0 8px 8px 0;
+			}
+
+			.observation-note {
+				border-left: 4px solid #7c3aed;
+				background: #f5f3ff;
+				padding: 1.5em;
+				margin: 2em 0;
+				border-radius: 0 8px 8px 0;
+			}
+
+			.key-point {
+				font-weight: 500;
+				color: #1e40af;
+			}
 		</style>
 	</head>
 	<body>
@@ -48,35 +102,38 @@
 		-->
 
 		<h2>Overview</h2>
+		<p>
+			This assignment focuses on geometric modeling and mesh manipulation techniques. At its core, the project implements de Casteljau's algorithm for both 2D Bezier curves and 3D Bezier patches, allowing for smooth curve and surface generation through parametric evaluation.
+			This project serves as a practical exercise in implementing essential computer graphics algorithms, providing me with hands-on experience in geometric modeling and mesh manipulation techniques that are fundamental to computer graphics applications.
+		</p>
 		
 		<h2>Section I: Bezier Curves and Surfaces</h2>
 
 		<h3>Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
+		<div class="implementation-note">
+			<p>In this implementation, I focused on the de Casteljau subdivision algorithm using the provided formula. A key challenge arose with <code>Vector2D.h</code> multiplication, which I resolved by implementing size-based condition checking. The solution ensures proper handling of points by returning appropriate values (0 or 1) based on the point count.</p>
+		</div>
 		<p>In this part, I pretty much implemented the de Casteljau subdivision algorithm with the given formula. However, I encounter a problem with multiplication with <code>Vector2D.h</code> I fixed that by implementing the condition  to check if the size of the point is less than 2 then return either 0 or 1 accordingly.</p>
 		<h4>evaluateStep:</h4>
 			<pre><code class="cpp">
-std::vector<Vector2D> BezierCurve::evaluateStep(std::vector<Vector2D> const &points)
-	{ 
-		// TODO Part 1.Bezier Curves
-		vector<Vector2D> res;
-	
-		// Check if input vector has at least 2 points
-		if (points.size() < 2) {
-		return points; 
-		}
-		
-		for (int i = 0; i < points.size() - 1; i++)
-		{
-		Vector2D pt1 = points[i];
-		Vector2D pt2 = points[i+1];
-		Vector2D pt = (1-t)*pt1 + t*pt2;
-		res.push_back(pt);
-		}
-	
-		return res;
-	}
-	
-			</code></pre>
+std::vector<Vector2D> BezierCurve::evaluateStep(std::vector<Vector2D> const &points) { 
+    // TODO Part 1.Bezier Curves
+    vector<Vector2D> res;
+
+    // Check if input vector has at least 2 points
+    if (points.size() < 2) {
+        return points; 
+    }
+    
+    for (int i = 0; i < points.size() - 1; i++) {
+        Vector2D pt1 = points[i];
+        Vector2D pt2 = points[i+1];
+        Vector2D pt = (1-t)*pt1 + t*pt2;
+        res.push_back(pt);
+    }
+
+    return res;
+}</code></pre>
 		<p>Below, I show the screenshots of each step / level of the evaluation from the original control points down to the final evaluated point + a screenshot of a slightly different Bezier curve.</p>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<td style="text-align: center;">
@@ -121,8 +178,15 @@ std::vector<Vector2D> BezierCurve::evaluateStep(std::vector<Vector2D> const &poi
 		</div>
 
 		<h3>Part 2: Bezier surfaces with separable 1D de Casteljau</h3>
+		<div class="implementation-note">
+			<p>
+				My implementation follows a two-step process. First, I evaluate a Bezier curve at parameter <code>u</code> for each row of control points using the standard de Casteljau algorithm, generating <code>n</code> intermediate points. These intermediate points then serve as input for another Bezier curve evaluation at parameter <code>v</code>.
+			</p>
+			<p>
+				Building on my previous implementation, <code>BezierPatch::evaluate1D</code> acts as a recursive function that applies de Casteljau's algorithm. It continues recursion until reaching a single point (the base case), otherwise calling <code>BezierPatch::evaluateStep</code> to process the intermediate points recursively. Finally, <code>BezierPatch::evaluate</code> orchestrates these operations to compute the complete Bezier surface.	
+			</p>
+		</div>
 		<p> For each row of control points in the grid, evaluate a Bezier curve at parameter <code>u</code> using the standard de Casteljau algorithm. This gives us <code>n</code> intermediate points. Then, take these <code>n</code> intermediate points and evaluate another Bezier curve at parameter <code>v</code>, again using the de Casteljau algorithm. <p>
-		<p>The implementation is quite similar to the previous part. So for this part, I follow the implementation from the previous part and use the de Casteljau algorithm to evaluate a Bezier surface. Then for <code>BezierPatch::evaluate1D</code> this is a recursive function for Casteljau's algorithm, it continues until there's only one point left. Then base case return the single point when the vector size is 1. Otherwise, it calls <code>BezierPatch::evaluateStep</code> and then recursively calls itself with the intermediate points. Finally, for <code>BezierPatch::evaluate</code>, it calls <code>BezierPatch::evaluate1D</code> with the correct number of control points to get the final Bezier surface.</p>
 		
 		<div class="code-section">
 			<h4>evaluateStep:</h4>
@@ -177,6 +241,16 @@ Vector3D evaluate(double u, double v) {
 		<h2>Section II: Triangle Meshes and Half-Edge Data Structure</h2>
 
 		<h3>Part 3: Area-weighted vertex normals</h3>
+		<div class="implementation-note">
+			<p>The implementation follows these key steps:</p>
+			<ul>
+				<li>Initialize a zero vector for accumulated normals</li>
+				<li>Iterate through faces, skipping boundary faces</li>
+				<li>Calculate face normals using <code>cross()</code> product</li>
+				<li>Weight normals by face area (0.5 * cross product magnitude)</li>
+				<li>Normalize the accumulated result</li>
+			</ul>
+		</div>
 		<p>For this part, I initalize the zero vector for each accumulated normaland create a loop that would iterated through the face, where I skip if it's a boundary face. Then I calculate the normal for each face and add it to the accumalted normal by using the <code>cross()</code> dot product *0.5 to get the area. Finally, I normalize the accumulated normal with area * the face area and assign it to the vertex. </p>
 		<br>
 		<div style="display: flex; flex-direction: column; align-items: center;">
@@ -193,63 +267,71 @@ Vector3D evaluate(double u, double v) {
 			  </tr>
 		</div>
 		<h3>Part 4: Edge flip</h3>
+		<div class="implementation-note">
+			<p>The edge flip implementation carefully manages mesh topology transformation through these steps:</p>
+			<ul>
+				<li>Collect all necessary elements (halfedges, vertices, faces)</li>
+				<li>Verify boundary conditions</li>
+				<li>Reassign pointers for new connectivity</li>
+				<li>Maintain mesh integrity throughout the operation</li>
+			</ul>
+			</div>
+		<div class="debug-note">
+			<p><strong>Debugging Approach:</strong> Visualization played a crucial role in my development process. Drawing diagrams helped me track connectivity changes, making it easier to understand how the mesh evolved with each operation. I also relied on systematic testing using simple meshes, like tetrahedra, to verify that mesh invariants were maintained after each modification.</p>
+		</div>
 		<p> I first collected all necessary elements involved in the transformation. For example, the halfedges of the edge being flipped, the next halfedges in each face, the four vertices forming the two triangles, and the two faces sharing the edge. Before performing the flip, I checked if either face is a boundary loop, in which case the operation isn't allowed. The core of the implementation involves reassigning all pointers to reflect the new connectivity. 
-			I used the <code>setNeighbors()</code> method to efficiently update all halfedge pointers (next, twin, vertex, edge, face) in a single call. I name the variable like he, heTwin, and heNext made the code more readable whihc is really when it comes to debugging the code and helped visualize the mesh structure during the operation. 
+			I used the <code>setNeighbors()</code> method to efficiently update all halfedge pointers (next, twin, vertex, edge, face) in a single call. I name the variable like he, heTwin, and heNext made the code more readable which is really helpful for me, when it comes to debugging the code and helped visualize the mesh structure during the operation. 
 			From my previous commit, I found out that I've assigned the vertex to the new one, so with this implementaion I followed the requirement to only reassign pointers without adding or deleting any mesh elements, maintaining the exact same number of elements before and after the flip. By maintaining a consistent ordering when updating pointers, I make sure that the mesh remains valid and properly connected after the flip operation.</p>
 		<div class="code-section">
 			<pre><code class="cpp">
-EdgeIter HalfedgeMesh::flipEdge( EdgeIter e0 )
-{   
-	// TODO Part 4.
-	// This method should flip the given edge and return an iterator to the flipped edge.
-	HalfedgeIter he = e0->halfedge();
-	HalfedgeIter heTwin = he->twin();
+EdgeIter HalfedgeMesh::flipEdge(EdgeIter e0) {   
+    // TODO Part 4.
+    // This method should flip the given edge and return an iterator to the flipped edge.
+    HalfedgeIter he = e0->halfedge();
+    HalfedgeIter heTwin = he->twin();
 
-	HalfedgeIter heNext = he->next();
-	HalfedgeIter heTwinNext = heTwin->next();        
-	HalfedgeIter heNextNext = heNext->next();
-	HalfedgeIter heTwinNextNext = heTwinNext->next();     
+    HalfedgeIter heNext = he->next();
+    HalfedgeIter heTwinNext = heTwin->next();        
+    HalfedgeIter heNextNext = heNext->next();
+    HalfedgeIter heTwinNextNext = heTwinNext->next();     
 
-	VertexIter vA = he->vertex();
-	VertexIter vB = heTwin->vertex();
-	VertexIter vC = heNextNext->vertex();
-	VertexIter vD = heTwinNextNext->vertex();
+    VertexIter vA = he->vertex();
+    VertexIter vB = heTwin->vertex();
+    VertexIter vC = heNextNext->vertex();
+    VertexIter vD = heTwinNextNext->vertex();
 
-	FaceIter faceA = he->face();
-	FaceIter faceB = heTwin->face();
+    FaceIter faceA = he->face();
+    FaceIter faceB = heTwin->face();
 
-	if (faceA->isBoundary() || faceB->isBoundary()) {
-	return e0;
-	}   
+    if (faceA->isBoundary() || faceB->isBoundary()) {
+        return e0;
+    }   
 
-	he->setNeighbors(heTwinNextNext, heTwin, vC, e0, faceA);
-	heNext->setNeighbors(he, heNext->twin(), vB, heNext->edge(), faceA);
-	heNextNext->setNeighbors(heTwinNext, heNextNext->twin(), vC, heNextNext->edge(), faceB);        
-	heTwin->setNeighbors(heNextNext, he, vD, e0, faceB);
-	heTwinNext->setNeighbors(heTwin, heTwinNext->twin(), vA, heTwinNext->edge(), faceB);
-	heTwinNextNext->setNeighbors(heNext, heTwinNextNext->twin(), vD, heTwinNextNext->edge(), faceA);
+    he->setNeighbors(heTwinNextNext, heTwin, vC, e0, faceA);
+    heNext->setNeighbors(he, heNext->twin(), vB, heNext->edge(), faceA);
+    heNextNext->setNeighbors(heTwinNext, heNextNext->twin(), vC, heNextNext->edge(), faceB);        
+    heTwin->setNeighbors(heNextNext, he, vD, e0, faceB);
+    heTwinNext->setNeighbors(heTwin, heTwinNext->twin(), vA, heTwinNext->edge(), faceB);
+    heTwinNextNext->setNeighbors(heNext, heTwinNextNext->twin(), vD, heTwinNextNext->edge(), faceA);
 
-	faceA->halfedge() = he;
-	faceB->halfedge() = heTwin;
-	
-	vA->halfedge() = heTwinNext;
-	vB->halfedge() = heNext;
-	vC->halfedge() = he;
-	vD->halfedge() = heTwin;
+    faceA->halfedge() = he;
+    faceB->halfedge() = heTwin;
+    
+    vA->halfedge() = heTwinNext;
+    vB->halfedge() = heNext;
+    vC->halfedge() = he;
+    vD->halfedge() = heTwin;
 
-	return e0;
-}
-			</code></pre>
+    return e0;
+}</code></pre>
 		</div>
 
 		<p><strong>Debugging Techniques I used:</strong></p>
 		<ul>
-			<li><strong>Geometric Visualization:</strong>
 				<ul>
 					<li>Drawing diagrams helps track how connectivity changes</li>
 				</ul>
 			</li>
-			<li><strong>Systematic Testing:</strong>
 				<ul>
 					<li>Testing on simple meshes first (like a tetrahedron) before complex ones</li>
 					<li>Verifying that mesh invariants are maintained after the flip</li>
@@ -272,13 +354,23 @@ EdgeIter HalfedgeMesh::flipEdge( EdgeIter e0 )
 			  </tr>
 		</div>
 		<h3>Part 5: Edge split</h3>
+		<div class="implementation-note">
+			<p>The edge split implementation follows a structured approach:</p>
+			<ul>
+				<li>Gather mesh elements using previous implementation patterns</li>
+				<li>Verify boundary conditions</li>
+				<li>Create new vertex at edge midpoint (<code>v0->position + v1->position</code> / 2)</li>
+				<li>Update halfedge pointers for proper connectivity</li>
+			</ul>
+		</div>
 		<p>To make thing clear, I first gathered all the necessary mesh elements following the same implementaion strategy from the previous parts. Then I check if either of the face represents ab boundary loop.
 		next part is I create a new vertex at the midpont of the edge to be split by taking <code>v0->position</code> + <code>v1->position</code> / 2. Then I update the halfedge pointers for the new vertex and the faces connected to the edge by setting their halfedges to the new vertex. 
 		The most important implementation detail is that I need to update the halfedge pointers for the new vertex and the faces connected to the edge by setting their halfedges to the new vertex. </p>
 		<br>
 		<strong>Boundary Edge</strong>
-		<p>For boundary edges, since it has only one adjacent face we would only need to split the interior face into two triangles. The boundary loop is preserved by inserting the new vertex into the boundary and connecting it appropriately. 
-			This requires creating four new halfedges, two new edges, and one new face. </p>
+		<p>
+			For boundary edges, since there’s only one adjacent face, I only need to split the interior face into two triangles. The boundary loop stays connected by inserting the new vertex into the boundary and connecting it appropriately. To do this, I create four new halfedges, two new edges, and one new face.
+		</p>
 		
 		<strong>Implementation Details for Boundary Edge:</strong>
 		<pre><code class="cpp">
@@ -424,9 +516,19 @@ if (e0->isBoundary()) {
 		<br>
 
 		<strong>Debugging:</strong>
-		<p>Compare to the previous part, I implemented this function like the way I would draw it out in paper and make the code follow that way which would be it easier to debug and for each step I would log out the current value on each line to make sure I'm on the right track</p>
+		<p>Compare to the previous part, I implemented this function like the way I would draw it out in paper and make the code follow that way which would be it easier to debug and for each step I would log out the current value on each line to make sure that I'm tracing the right pointers.</p>
 	<br>
 		<h3>Part 6: Loop subdivision for mesh upsampling</h3>
+		<div class="implementation-note">
+			<p>The Loop subdivision implementation follows a systematic five-step approach:</p>
+			<ol>
+				<li>Compute new positions for existing vertices using Loop subdivision rules</li>
+				<li>Calculate edge midpoint positions using the formula: <code>3/8 * (A + B) + 1/8 * (C + D)</code></li>
+				<li>Store original edges to prevent iteration issues</li>
+				<li>Split edges and mark new elements</li>
+				<li>Flip appropriate edges to achieve proper subdivision patterns</li>
+			</ol>
+		</div>
 		<p> In this part, I implemented the loop subdivision by following a five-step approach mentioned in the code. First, I computed new positions for all existing vertices using the Loop subdivision rule, where each vertex's new position is a weighted average of its original position and its neighbors' positions.
 			Then I calculated new poistions for edge midpointsm using a weighted average of the the edge endpoints and opposite vertices. For each edge I used  the formula <code>3/8 * (A + B) + 1/8 * (C + D)</code> to determine where the new vertex should be place.
 
@@ -454,7 +556,7 @@ if (e0->isBoundary()) {
 		</div>
 		<strong>Observation On Meshes</strong>
 		<p>
-			The observation on mesh according to the picture above, I see that loop subdivision has a notable smoothing effect on meshes. Where sharp corners and edges become progressively rounded with each subdivision iteration. This happend because the subdivision scheme inherently averages vertex positions with their neighbors, causing sharp features to be blended with surrounding geometry.
+			According to the picture above, I see that loop subdivision has a notable smoothing effect on meshes. Where sharp corners and edges become progressively rounded with each subdivision iteration. This happend because the subdivision scheme inherently averages vertex positions with their neighbors, causing sharp features to be blended with surrounding geometry.
 			Another interesting observation is that Loop subdivision preserves the overall shape and volume of the mesh while increasing its smoothness. However, this can sometimes lead to shrinkage in certain areas, particularly in regions with high curvature. This effect becomes more pronounced with multiple subdivision iterations. When it comes to reduce the pre-splitting edges in area some edges, by 
 			adding more vertices along sharp edges before applying subdivision, this create a higher density of vertices that better preserve the original shape. This works because the subdivision algorithm has more points to work with, allowing it to maintain a closer approximation to the original sharp feature.
 		</p>
@@ -483,12 +585,14 @@ if (e0->isBoundary()) {
 				  </td>
 			  </tr>
 		</div>
-		<p>When I apply Loop subdivision to a cube model, I notice an interesting asymmetry occur after multiple iterations. This happens because the initial triangulation of the cube isn’t symmetric. Each face of the cube is usually divided into two triangles by a diagonal edge, but these diagonals don’t follow a consistent pattern across all faces. As Loop subdivision creates new vertices at edge midpoints and connects them based on the existing topology, this asymmetric edge structure gets amplified with each iteration.
-			I can pre-process the cube with strategic edge flips and splits. One effective approach is to first split each face into four triangles by adding a vertex at the center and connecting it to the four corners. This creates a more symmetric initial triangulation. I can also split edges along the cube’s original edges to increase the density of vertices in these regions, which helps preserve the cube’s sharp features during subdivision.
-			With a symmetric starting point, loop subdivision applies its smoothing operations more uniformly across the entire model. This adding the vertices along the cube’s edges also helps maintain sharpness during subdivision by providing more points for the algorithm to work with. As a result, the cube retains its important geometric features while achieving a smoother, more consistent subdivision.
-		</p>
-
-
+		<div class="observation-note">
+			<p><strong>Cube Model Analysis:</strong></p>
+			<p>
+				When I apply Loop subdivision to a cube model, I notice an interesting asymmetry occur after multiple iterations. This happens because the initial triangulation of the cube isn’t symmetric. Each face of the cube is usually divided into two triangles by a diagonal edge, but these diagonals don’t follow a consistent pattern across all faces. 
+				In order to pre-process the cube with strategic edge flips and splits. One effective approach is to first split each face into four triangles by adding a vertex at the center and connecting it to the four corners. This creates a more symmetric initial triangulation. I can also split edges along the cube’s original edges to increase the density of vertices in these regions, which helps preserve the cube’s sharp features during subdivision.
+				With a symmetric starting point, loop subdivision applies its smoothing operations more uniformly across the entire model. This adding the vertices along the cube’s edges also helps maintain sharpness during subdivision by providing more points for the algorithm to work with. As a result, the cube retains its important geometric features while achieving a smoother, more consistent subdivision.
+			</p>
+		</div>
 		</div>
 	</body>
 </html>
