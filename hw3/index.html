@@ -28,12 +28,13 @@
 	<body>
 		<div class="container">
 		<h1>CS184/284A Spring 2025 Homework 3 Write-Up</h1>
-		<div style="text-align: center;">Names: </div>
+		<div style="text-align: center;">Names: Xay Hanmonty</div>
 
 		<br>
 
-		Link to webpage: (TODO) <a href="https://cs184.eecs.berkeley.edu/sp25">cs184.eecs.berkeley.edu/sp25</a>
-		Link to GitHub repository: (TODO) <a href="https://cs184.eecs.berkeley.edu/sp25">cs184.eecs.berkeley.edu/sp25</a>
+		Link to webpage: <a href="https://cal-cs184-student.github.io/hw-webpages-xay-writeup/">cal-cs184-student/hw-webpages-xay-writeup</a>
+		<br>
+		Link to GitHub repository: <a href="https://github.com/cal-cs184-student/sp25-hw3-xhw3">cal-cs184-student/sp25-hw3-xhw3</a>
 		
 		<figure>
 			<img src="cornell.png" alt="Cornell Boxes with Bunnies" style="width:70%"/>
@@ -45,32 +46,49 @@
 		-->
 
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
-
+		<strong>(TODO)</strong>
 		<h2>Part 1: Ray Generation and Scene Intersection</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<strong>Ray Generation pipeline</strong>
+		<pre><code>for each pixel (x,y):
+    for each sample:
+        // 1. Generate normalized coordinates
+        x_norm = (x + random_offset) / width
+        y_norm = (y + random_offset) / height
 
-		<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+        // 2. Generate camera ray
+        ray = camera->generate_ray(x_norm, y_norm)
+
+        // 3. Trace ray through scene
+        radiance = est_radiance_global_illumination(ray)</code></pre>
+	<p style="text-align: justify;">
+		For the triangle intersection, I used Möller-Trumbore algorithm
+		which computes both the intersection point and barycentric coordinates in a single calculation. The algorithm starts by calculating two edge vectors of the triangle (<code>edge1</code> and <code>edge2</code>) from vertex v1. Then calculates a vector h as the cross product of the ray direction and edge2, 
+		followed by calculating the determinant using the dot product of edge1 and h. If the determinant is close to zero, the ray is considered parallel to the triangle, and we return false. Otherwise, we proceed by calculating the vector s from vertex v1 to the ray origin and use 
+		it to find the barycentric coordinates (beta and gamma) through a series of dot products and cross products. The third barycentric coordinate (alpha) is calculated as one minus the sum of beta and gamma. If any barycentric coordinate is negative or if their sum exceeds 1, the intersection point lies 
+		outside the triangle, and we return false. At the end, we calculate the intersection distance t and verify it falls within the ray's valid range (min_t to max_t). 
+	</p>
+
+		<p>Here are some of the results from the Ray intersections:</p>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="../hw3/part1/CBempty.png" width="400px"/>
+				  <figcaption>CBempty</figcaption>
 				</td>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="../hw3/part1/banana.png" width="400px"/>
+				  <figcaption>banana</figcaption>
 				</td>
 			  </tr>
 			  <tr>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="../hw3/part1/spheres_normal.png" width="400px"/>
+				  <figcaption>CBspheres</figcaption>
 				</td>
 				<td style="text-align: center;">
-				  <img src="cornell.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
+				  <img src="../hw3/part1/cube_normal.png" width="400px"/>
+				  <figcaption>cube</figcaption>
 				</td>
 			  </tr>
 			</table>
