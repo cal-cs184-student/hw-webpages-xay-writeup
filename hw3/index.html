@@ -174,6 +174,7 @@
 		</div>
 		<strong>Compare rendering times on cows.dae vs maxplanck.dae</strong><br>
 		For cow.dae (5,856 primitives) BVH contruction take 0.0008 sec while maxplanck.dae (50,801 primitives) take 0.0082 sec. This demonstrates the BVH's O(log n) traversal efficiency and For more complex geometry, the Stanford Dragon (105,120 primitives), rendering with BVH approximately 4.4 million rays per second take around 7.1 intersection tests per ray on average . If we compare that without BVH, each ray would need to test against every primitive requiring it's own primitive intersection test per ray. So, the spatial median split strategy proves effective, creating well-balanced trees that enable fast ray traversal while keeping the BVH construction time minimal. See the comparision below:
+		<br><br>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
 			  <tr>
@@ -197,27 +198,170 @@
 		</div>
 		
 		<h2>Part 3: Direct Illumination</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<strong>Part 3.1</strong><br>
+		The function <code>Vector3D DiffuseBSDF::f</code> Calculates how much light is reflected from direction <code>wi</code> (incoming) to direction <code>wo</code> (outgoing), where it returns <code>reflectance / PI</code>. For <code>DiffuseBSDF::sample_f</code>, it generates a random incoming direction <code>wi</code> and returns the BSDF value for that direction.
+		then return by calling <code>f(wo, *wi)</code>
+
+		<br><br><strong>Part 3.2</strong><br>
+		Given Ray &r and Intersection &isect , <code>PathTracer::zero_bounce_radiance</code> returns the light that reaches the camera without bouncing off any of the objects in the scene. This is only the light that is coming from the light source, I used the BSDF of the surface at the point of intersection and returned its emission. 
+		Then, updated <code>est_radiance_global_illumination</code> to return the zero-bounce radiance instead of normal shading.
+
+		<br><br><strong>Part 3.3: Direct Lighting with Uniform Hemisphere Sampling</strong><br>
+		In this approach, I randomly sample directions in the hemisphere above the hit point and check if those directions hit a light source.
+		<br><strong>The Algorithm Follows:</strong>
+		<ol>
+			<li>Sample a random direction in the hemisphere above the hit point</li>
+			<li>Cast a ray in that direction to see if it hits anything</li>
+			<li>If it hits a light source, calculate the contribution from that light</li>
+			<li>Average multiple samples to get the final estimate</li>
+		</ol>
+		<br><strong>Implementation below:</strong>
+		<code><pre>
+Vector3D PathTracer::estimate_direct_lighting_hemisphere(const Ray &r, const Intersection &isect) {
+	Matrix3x3 o2w;
+	make_coord_space(o2w, isect.n);
+	Matrix3x3 w2o = o2w.T();
+	
+	const Vector3D hit_p = r.o + r.d * isect.t;
+	const Vector3D w_out = w2o * (-r.d);
+	
+	Vector3D L_out(0, 0, 0);	
+	
+	for (int i = 0; i < ns_area_light; i++) {
+	double pdf;
+	Vector3D w_in = hemisphereSampler->get_sample(&pdf);
+	
+	Vector3D w_in_world = o2w * w_in;
+	
+	Ray sample_ray(hit_p, w_in_world);
+	sample_ray.min_t = EPS_F;
+	
+	Intersection light_isect;
+	if (bvh->intersect(sample_ray, &light_isect)) {
+
+		if (light_isect.bsdf->get_emission().norm2() > 0) {
+
+		Vector3D L_i = light_isect.bsdf->get_emission();
 		
+
+		Vector3D f = isect.bsdf->f(w_out, w_in);
+		
+		double cos_theta = w_in.z;
+		L_out += f * L_i * cos_theta / pdf;
+		}
+	}
+	}
+	
+	L_out /= ns_area_light;
+	
+	return L_out;
+}
+		</pre></code>
+
+		<br><br><strong>Part 3.4: Direct Lighting with Important Sampling Lights</strong><br>
+		In this approach, I directly sample the light sources instead of random directions, this follow the same implementation as the previous part where it is much more efficient.
+		<br><strong>The Algorithm Follows:</strong>
+		<ol>
+			<li>For each light source in the scene:</li>
+			<li>Sample a point on the light</li>
+			<li>Calculate the direction from the hit point to that light point</li>
+			<li>Check if the path is unoccluded (no objects blocking the light)</li>
+			<li>If unoccluded, calculate the contribution</li>
+		</ol>
+		<br><strong>Implementation below:</strong>
+		<code><pre>
+Vector3D PathTracer::estimate_direct_lighting_importance(const Ray &r, const Intersection &isect) {
+Matrix3x3 o2w;
+make_coord_space(o2w, isect.n);
+Matrix3x3 w2o = o2w.T();
+
+const Vector3D hit_p = r.o + r.d * isect.t;
+const Vector3D w_out = w2o * (-r.d);
+
+Vector3D L_out(0, 0, 0);
+
+for (auto light : scene->lights) {
+	int num_samples = light->is_delta_light() ? 1 : ns_area_light;
+	
+	Vector3D light_contribution(0, 0, 0);
+	
+	for (int i = 0; i < num_samples; i++) {
+	Vector3D wi_world;
+	double dist_to_light;
+	double pdf;
+	Vector3D light_intensity = light->sample_L(hit_p, &wi_world, &dist_to_light, &pdf);
+	
+	if (pdf < 1e-4 || light_intensity.norm2() < 1e-6) {
+		continue;
+	}
+	
+	Vector3D wi = w2o * wi_world;
+	
+	if (wi.z <= 0) {
+		continue;
+	}
+	
+	Ray shadow_ray(hit_p, wi_world);
+	shadow_ray.min_t = EPS_F;
+	shadow_ray.max_t = dist_to_light - EPS_F;
+	
+	Intersection shadow_isect;
+	if (!bvh->intersect(shadow_ray, &shadow_isect)) {
+		Vector3D f = isect.bsdf->f(w_out, wi);
+		double cos_theta = wi.z;
+		
+		if (light->is_delta_light()) {
+		light_contribution += f * light_intensity * cos_theta;
+		} else {
+		light_contribution += f * light_intensity * cos_theta / pdf;
+		}
+	}
+	}
+	
+	if (num_samples > 0) {
+	L_out += light_contribution / num_samples;
+	}
+}
+
+return L_out;
+}
+		</pre></code>
+		<br><br>
+		<strong>Compare the results between uniform hemisphere sampling and lighting sampling</strong><br><br>
+		The importance sampling method produces significantly cleaner images with less noise compared to uniform hemisphere sampling. This occurs because importance sampling focuses on sampling the actual light sources, while hemisphere sampling wastes computational effort by randomly sampling all directions, including those without light sources.
+		<br><br>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part3/CBbunny_H_64_32.png" width="400px"/>
+				  <figcaption>CBbunny.dae with hemisphere sampling</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw3/part3/bunny.png" width="400px"/>
+				  <figcaption>CBbunny.dae with importance sampling</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part3/CBspheres_S.png" width="400px"/>
+				  <figcaption>CBspheres.dae with hemisphere sampling</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw3/part3/CBspheres.png" width="400px"/>
+				  <figcaption>CBspheres.dae with importance sampling</figcaption>
+				</td>
+			  </tr>
+			</table>
+			<br>
+		</div>
+
 		<h2>Part 4: Global Illumination</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 		<h2>Part 5: Adaptive Sampling</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-		<h2>(Optional) Part 6: Extra Credit Opportunities</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
-			</li>
-		</ul>
 		</div>
 	</body>
 </html>
