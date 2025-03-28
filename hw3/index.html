@@ -95,11 +95,110 @@
 		</div>
 		
 		<h2>Part 2: Bounding Volume Hierarchy</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
+		<strong>BVH construction algorithm</strong><br>
+		For this method, I uses the Mean of Centroids heuristic along the axis with the largest extent. Below is the algorithm construction:
+		<ol>
+			<li>Create an empty bounding box and calculate the number of primitives</li>
+			<li>Check if there are no primitives (size = 0)</li>
+			<li>Iterate through all primitives to:
+				<ul>
+					<li>Expand the overall bounding box to include it</li>
+					<li>Add the primitive's centroid to a running sum</li>
+				</ul>
+			</li>
+			<li>Create a new BVH node with the computed bounding box</li>
+			<li>Check if the number of primitives is small enough (≤ max_leaf_size)
+				<ul><li>If true, create a leaf node by setting start and end iterators</li>
+				<li>Return the leaf node (base case)</li></ul>
+			</li>
+			<li>Determine the axis with the largest extent:
+				<ul>
+					<li>Start with X-axis (axis = 0)</li>
+					<li>If Y-extent > X-extent, switch to Y-axis (axis = 1)</li>
+					<li>If Z-extent > current axis extent, switch to Z-axis (axis = 2)</li>
+				</ul>
+			</li>
+			<li>Calculate the mean of all centroids by dividing the sum by the number of primitives</li>
+			<li>Use the coordinate of this mean along the chosen axis as the split point</li>
+			<li>Partition the primitives into two groups using std::partition:
+				<ul>
+					<li>Left group: centroids < split point</li>
+					<li>Right group: centroids ≥ split point</li>
+				</ul>
+			</li>
+			<li>Check if all primitives ended up on one side (middle = start or middle = end)
+				<ul>
+					<li>If true, fall back to a median split:</li>
+					<li>Set middle to start + (size/2)</li>
+					<li>Use std::nth_element to find the median primitive</li>
+				</ul>
+			</li>
+			<li>Recursively construct both subtrees and return the completed node:
+				<ul>
+					<li>Build left subtree with primitives [start, middle)</li>
+					<li>Build right subtree with primitives [middle, end)</li>
+				</ul>
+			</li>
+		</ol>
+		<p>Here are some of the results from the BVH construction:</p>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part2/image.png" width="400px"/>
+				  <figcaption>BVH</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw3/part2/cow_refactored.png" width="400px"/>
+				  <figcaption>cow</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part2/maxplanck_final.png" width="400px"/>
+				  <figcaption>Max Planck</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw3/part2/CBlucy.png" width="400px"/>
+				  <figcaption>CBlucy (Complex geometry)</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;" colspan="2">
+				  <img src="../hw3/part2/dragon.png" width="400px"/>
+				  <figcaption>Dragon</figcaption>
+				</td>
+			  </tr>
+			</table>
+			<br>
+		</div>
+		<strong>Compare rendering times on cows.dae vs maxplanck.dae</strong><br>
+		For cow.dae (5,856 primitives) BVH contruction take 0.0008 sec while maxplanck.dae (50,801 primitives) take 0.0082 sec. This demonstrates the BVH's O(log n) traversal efficiency and For more complex geometry, the Stanford Dragon (105,120 primitives), rendering with BVH approximately 4.4 million rays per second take around 7.1 intersection tests per ray on average . If we compare that without BVH, each ray would need to test against every primitive requiring it's own primitive intersection test per ray. So, the spatial median split strategy proves effective, creating well-balanced trees that enable fast ray traversal while keeping the BVH construction time minimal. See the comparision below:
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part2/cow_number.png" width="400px"/>
+				  <figcaption>Cow</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw3/part2/maxplanck_number.png" width="400px"/>
+				  <figcaption>Max Planck</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;" colspan="2">
+				  <img src="../hw3/part2/dragon_number.png" width="400px"/>
+				  <figcaption>Dragon</figcaption>
+				</td>
+			  </tr>
+			</table>
+			<br>
+		</div>
+		
 		<h2>Part 3: Direct Illumination</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
+		
 		<h2>Part 4: Global Illumination</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
