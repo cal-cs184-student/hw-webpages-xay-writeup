@@ -179,7 +179,7 @@
 			<br>
 		</div>
 		<strong>Compare rendering times on cows.dae vs maxplanck.dae</strong><br>
-		For cow.dae (5,856 primitives) BVH contruction take 0.0008 sec while maxplanck.dae (50,801 primitives) take 0.0082 sec. This demonstrates the BVH's O(log n) traversal efficiency and For more complex geometry, the Stanford Dragon (105,120 primitives), rendering with BVH approximately 4.4 million rays per second take around 7.1 intersection tests per ray on average . If we compare that without BVH, each ray would need to test against every primitive requiring it's own primitive intersection test per ray. So, the spatial median split strategy proves effective, creating well-balanced trees that enable fast ray traversal while keeping the BVH construction time minimal. See the comparision below:
+		For cow.dae (5,856 primitives) BVH contruction take 0.0008 sec while maxplanck.dae (50,801 primitives) take 0.0082 sec. This demonstrates the BVH's O(log n) traversal efficiency and for more complex geometry, the Stanford Dragon (105,120 primitives), rendering with BVH approximately 4.4 million rays per second take around 7.1 intersection tests per ray on average . If we compare that without BVH, each ray would need to test against every primitive requiring it's own primitive intersection test per ray. So, the spatial median split strategy proves effective, creating well-balanced trees that enable fast ray traversal while keeping the BVH construction time minimal. See the comparision below:
 		<br><br>
 		<div style="display: flex; flex-direction: column; align-items: center;">
 			<table style="width: 100%; text-align: center; border-collapse: collapse;">
