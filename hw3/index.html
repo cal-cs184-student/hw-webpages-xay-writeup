@@ -46,7 +46,13 @@
 		-->
 
 		<h2>Overview</h2>
-		<strong>(TODO)</strong>
+		In this project, I implemented a pathtracer to create images with realistic lighting and shadows. I started by writing algorithms to generate rays that intersect with the scene. Through my implementation of sampling intersections with triangles and spheres, I was able to gather information about the objects in the scene. To speed up the intersection sampling process, I implemented bounding volume hierarchies (BVH) to organize the scene geometry into a hierarchical tree. I built the BVH tree, implemented intersection tests between rays and bounding boxes, and created a system to traverse the tree and test intersections of each BVH's leaf node with the incoming ray.
+
+		For handling lighting in the scene, I first developed an algorithm to render direct illumination by combining zero-bounce illumination (light directly from the source) and one-bounce illumination (light reflected off objects, creating dark shadows). I then enhanced this by adding indirect illumination from light recursively bouncing off objects, using random sampling and Monte Carlo integration to estimate radiance. This made my rendered images look more realistic, as the indirect illumination captured how colors from nearby surfaces influence the shadows cast by objects. Since higher bounces contribute less light exponentially, I optimized my implementation by adding random termination (Russian roulette) to reduce recursion depth while maintaining realistic rendering.
+
+		While my Monte Carlo path tracing implementation produced good results, I wanted to further reduce noise in the rendering. I accomplished this by implementing adaptive sampling, which concentrates sampling efforts in areas where pixels converge quickly.
+
+		By combining all these techniques, I created a pathtracer capable of rendering images with various parameters, including adjustable numbers of light bounces and light rays.
 		<h2>Part 1: Ray Generation and Scene Intersection</h2>
 		<strong>Ray Generation pipeline</strong>
 		<pre><code>for each pixel (x,y):
@@ -216,8 +222,7 @@
 			<li>Average multiple samples to get the final estimate</li>
 		</ol>
 		<br><strong>Implementation below:</strong>
-		<code><pre>
-Vector3D PathTracer::estimate_direct_lighting_hemisphere(const Ray &r, const Intersection &isect) {
+		<pre><code>Vector3D PathTracer::estimate_direct_lighting_hemisphere(const Ray &r, const Intersection &isect) {
 	Matrix3x3 o2w;
 	make_coord_space(o2w, isect.n);
 	Matrix3x3 w2o = o2w.T();
@@ -256,7 +261,7 @@ Vector3D PathTracer::estimate_direct_lighting_hemisphere(const Ray &r, const Int
 	
 	return L_out;
 }
-		</pre></code>
+		</code></pre>
 
 		<br><br><strong>Part 3.4: Direct Lighting with Important Sampling Lights</strong><br>
 		In this approach, I directly sample the light sources instead of random directions, this follow the same implementation as the previous part where it is much more efficient.
@@ -265,12 +270,11 @@ Vector3D PathTracer::estimate_direct_lighting_hemisphere(const Ray &r, const Int
 			<li>For each light source in the scene:</li>
 			<li>Sample a point on the light</li>
 			<li>Calculate the direction from the hit point to that light point</li>
-			<li>Check if the path is unoccluded (no objects blocking the light)</li>
+			<li>Check if the path has no objects blocking the light</li>
 			<li>If unoccluded, calculate the contribution</li>
 		</ol>
 		<br><strong>Implementation below:</strong>
-		<code><pre>
-Vector3D PathTracer::estimate_direct_lighting_importance(const Ray &r, const Intersection &isect) {
+		<pre><code>Vector3D PathTracer::estimate_direct_lighting_importance(const Ray &r, const Intersection &isect) {
 Matrix3x3 o2w;
 make_coord_space(o2w, isect.n);
 Matrix3x3 w2o = o2w.T();
@@ -325,7 +329,7 @@ for (auto light : scene->lights) {
 
 return L_out;
 }
-		</pre></code>
+		</code></pre>
 		<br><br>
 		<strong>Compare the results between uniform hemisphere sampling and lighting sampling</strong><br><br>
 		The importance sampling method produces significantly cleaner images with less noise compared to uniform hemisphere sampling. This occurs because importance sampling focuses on sampling the actual light sources, while hemisphere sampling wastes computational effort by randomly sampling all directions, including those without light sources.
@@ -388,11 +392,282 @@ return L_out;
 		<br><br>
 
 		<h2>Part 4: Global Illumination</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>Part 5: Adaptive Sampling</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
+		I spent alot of time on this part because I was having a hard time getting the correct results + I just found out about instructional machines to render my image.
+		<br><br>
+		<strong>Part 4.2: Global Illumination with up to N Bounces of Light</strong> <br><br>
+		First off,  I calculate the total illumination by combining direct and indirect lighting using <code>PathTracer::est_radiance_global_illumination</code>. To handle multiple light bounces, I implemented <code>PathTracer::at_least_one_bounce_radiance</code> which recursively traces rays through the scene. Then, set the ray depth to <code>max_ray_depth</code> in <code>PathTracer::raytrace_pixel</code> to control the number of recursive bounces.
+		The recursive ray tracing process begins at each intersection point, where rays are traced through the scene for up to <code>max_ray_depth</code> bounces, accumulating both direct and indirect illumination at each step. Here's the implementation breakdown:
+		<ol>
+			<li>Check accumulation flag:
+				<pre><code>if (!isAccumBounces) {
+    return one_bounce_radiance(r, isect);
+}</code></pre>
+			</li>
+			<li>Initialize with direct illumination:
+				<pre><code>L_out = one_bounce_radiance(r, isect);</code></pre>
+			</li>
+			<li>Sample from BSDF:
+				<pre><code>Vector3D w_in;
+double pdf;
+Vector3D f = isect.bsdf->sample_f(w_out, &w_in, &pdf);</code></pre>
+			</li>
+			<li>Convert to world space:
+				<pre><code>Vector3D w_in_world = o2w * w_in;</code></pre>
+			</li>
+			<li>Generate sample ray:
+				<pre><code>Ray sample_ray(hit_p, w_in_world);
+sample_ray.min_t = EPS_F;
+sample_ray.depth = r.depth + 1;</code></pre>
+			</li>
+			<li>Check for intersection:
+				<pre><code>Intersection sample_isect;
+if (!bvh->intersect(sample_ray, &sample_isect)) {
+    // No intersection case
+}</code></pre>
+			</li>
+			<li>Process intersection:
+				<pre><code>Vector3D L = at_least_one_bounce_radiance(sample_ray, sample_isect);</code></pre>
+			</li>
+			<li>Calculate cosine term:
+				<pre><code>double cos_theta = w_in.z;  // In local coordinates, normal is (0,0,1)</code></pre>
+			</li>
+			<li>Accumulate final contribution:
+				<pre><code>L_out += f * L * cos_theta / pdf;</code></pre>
+			</li>
+		</ol>
+		<br><br>
+		<strong style="text-align: center;">Using 1024 samples per pixel with global illumination:</strong>
+		<br><br>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part4/blob.png" width="400px"/>
+				  <figcaption>blob.dae</figcaption>
+				</td>
+				<td style="text-align: center;">
+					<img src="../hw3/part4/wall-e.png" width="400px"/>
+					<figcaption>wall-e.dae</figcaption>
+				  </td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;" colspan="2">
+					<img src="../hw3/part4/dragon_64_32.png" width="400px"/>
+					<figcaption>dragon.dae</figcaption>
+				</td>
+			  </tr>
+			</table>
+			<br>
+		</div>	
+		<br><br>
+		The images below show the distinct characteristics of direct versus indirect illumination. In direct lighting, you can  see that the sharp shadows and bright light sources. However, in indirect, the light sources appear dark while the shadows showing color from the pink, purple, and white surfaces surrounding the sphere.
+		<br><br>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part4/CBspheres_lambertian_direct.png" width="400px"/>
+				  <figcaption>CBspheres_direct.dae</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw3/part4/CBspheres_lambertian_indirect.png" width="400px"/>
+				  <figcaption>CBspheres_indirect.dae</figcaption>
+				</td>
+			  </tr>
+			</table>
+			<br>
 		</div>
-	</body>
+		<br><br>
+
+		<strong>Part 4.3: Global Illumination with Russian Roulette</strong> <br><br>
+		For this part, the implementation pretty much the same as the previous part. In addition, by adding Russian roulette <code>(random termination)</code> this optimize the rendering of global illumination by making it so that it can recurse less than max_ray_depth times.
+		I chose a termination probability of 0.3 (between the recommended 0.3 and 0.7) for Russian Roulette. When comparing the results with and without Russian Roulette, I noticed very minimal differences. The only distinction I could observe was when zooming in significantly where the Russian Roulette version appeared slightly more grainy.
+		<br><br>
+		<strong>Non-Accumulated Versions</strong><br>
+
+		In the No Accumulation column, I observed how each bounce contributes to the final image. The 2nd bounce reveals light that bounced off the walls/floor onto the bunny or vice versa. I noticed the bottom of the bunny becomes slightly illuminated due to light reflecting off the floor where an effect impossible to see with just the first bounce. The 3rd bounce adds subtle environmental lighting, creating a dim but recognizable view of the scene.
+		<br><br>
+		<strong>Accumulated Versions</strong><br>
+
+		Looking at the accumulated renders, I started with max-depth of 0 showing only the light source <code>(zero-bounce)</code>. With one bounce, I captured only directly lit areas, resulting in dark shadows. Adding more bounces, I saw the shadows and indirect areas become gradually more illuminated, creating a more realistic appearance. I also noticed the bunny reflecting the colored walls, showing how light picks up wall colors before hitting the bunny. After 3 bounces, improvements became subtle, mainly affecting overall brightness and fine surface details.
+		<br><br>
+		<strong>Russian Roulette</strong><br>
+
+		Between using Russian Roulette termination and not, I observe little to no difference. I chose a termination probability of 0.30, since it was between the recommended 0.3 and 0.7, and observed that it produced results very similar to if I didn’t use Russian Roulette. The difference is only really apparent if I zoom in a lot, where I see that the Russian Roulette version looks a slight bit more grainy.
+		<br><br>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 100%; text-align: center; border-collapse: collapse; border: 1px solid black;">
+				<tr style="border: 1px solid black;">
+					<th style="border: 1px solid black; padding: 8px;">Max Ray Depth</th>
+					<th style="border: 1px solid black; padding: 8px;">Accumulation</th>
+					<th style="border: 1px solid black; padding: 8px;">No Accumulation</th>
+					<th style="border: 1px solid black; padding: 8px;">Accumulation + Russian Roulette</th>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 8px;">0</td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/CBbunny_m0_o0.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/CBbunny_m0_o0.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/CBbunny_m0_o0.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 8px;">1</td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image38.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image42.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image42.png" width="400px"/></td>
+
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 8px;">2</td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image19.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image9.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image17.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 8px;">3</td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image35.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image9.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image6.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 8px;">4</td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image27.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image9.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image6.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 8px;">5</td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image11.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image9.png" width="400px"/></td>
+					<td style="border: 1px solid black; padding: 8px;">&nbsp;</td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 8px;">100</td>
+					<td style="border: 1px solid black; padding: 8px;">&nbsp;</td>
+					<td style="border: 1px solid black; padding: 8px;">&nbsp;</td>
+					<td style="border: 1px solid black; padding: 8px;"><img src="../hw3/part4/image15.png" width="400px"/></td>
+				</tr>
+			</table>
+		</div>
+		<br><br>
+		<br><br>
+		<div style="text-align: center;"><strong>As the number of samples increases, the noise levels of the image decreases.</strong></div>
+		<br><br>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 80%; text-align: center; border-collapse: collapse; border: 1px solid black;">
+				<tr style="border: 1px solid black;">
+					<th style="border: 1px solid black; padding: 2%;">sample-per-pixel rates (S) </th>
+					<th style="border: 1px solid black; padding: 2%;">CBspheres_lambertian.dae</th>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2%;">2</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw3/part4/CBspheres_lambertian_s1.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2%;">4</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw3/part4/CBspheres_lambertian_s2.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2px;">8</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw3/part4/CBspheres_lambertian_s4.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2px;">16</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw3/part4/CBspheres_lambertian_s8.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2%;">64</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw3/part4/CBspheres_lambertian_s64.png" width="400px"/></td>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2%;">1024</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw3/part4/CBspheres_lambertian_direct.png" width="400px"/></td>
+				</tr>
+			</table>
+		</div>
+		
+		<h2>Part 5: Adaptive Sampling</h2>
+		<div style="text-align: justify;">
+			<p>For this part, adaptive sampling is a technique that optimizes the rendering process by varying the number of samples per pixel based on how quickly each pixel converges. For each pixel, we track the mean (μ) and variance (σ²) of the samples we've taken.</p>
+			
+			<p><strong>Confidence Interval:</strong> We use the formula I = 1.96 × σ/√n to determine if a pixel has converged, where a pixel is considered converged when I ≤ maxTolerance × μ</p>
+		</div>
+		<br>
+
+		<strong>Implementation Details:</strong>
+		<ol>
+			<li><strong>Sample Processing:</strong>
+				<pre><code>// Generate ray and compute radiance
+Ray ray = camera->generate_ray(x_norm, y_norm);
+Vector3D radiance = est_radiance_global_illumination(ray);
+
+// Update statistics
+total_radiance += radiance;
+s1 += radiance;
+s2 += radiance * radiance; 
+samplesCompleted++;</code></pre>
+			</li>
+
+			<li><strong>Convergence Check:</strong>
+				<pre><code>if ((i + 1) % samplesPerBatch == 0 && i + 1 < num_samples) {
+    // Compute mean
+    Vector3D mean = s1 / samplesCompleted;
+    
+    if (samplesCompleted > 1) {
+        // Compute variance: (s2 - s1²/n) / (n-1)
+        Vector3D variance = (s2 - (s1 * s1) / samplesCompleted) 
+                          / (samplesCompleted - 1);
+        
+        // Compute confidence interval
+        double sigma = sqrt(variance.illum());
+        double I = 1.96 * sigma / sqrt(samplesCompleted);
+        
+        // Check convergence
+        if (I <= maxTolerance * mean.illum()) {
+            break;  // Stop sampling this pixel
+        }
+    }
+}</code></pre>
+			</li>
+
+			<li><strong>Final Update:</strong>
+				<pre><code>// Update pixel with average radiance
+Vector3D avg_radiance = total_radiance / samplesCompleted;
+sampleBuffer.update_pixel(avg_radiance, x, y);
+sampleCountBuffer[x + y * sampleBuffer.w] = samplesCompleted;</code></pre>
+			</li>
+		</ol>
+
+		<br>
+		<strong>Results Comparison:</strong>
+		<p style="text-align: justify;">Below are comparisons between regular rendering (left) and the sample rate visualization (right). The brighter areas in the rate visualization indicate regions where more samples were needed for convergence.</p>
+		<br>
+
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 50%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw3/part4/wall-e.png" width="400px"/>
+				  <figcaption>wall-e.dae (Regular Render)</figcaption>
+				</td>
+				<td style="text-align: center;">
+					<img src="../hw3/part5/wall-e_rate_task5.png" width="400px"/>
+					<figcaption>wall-e.dae (Sample Rate)</figcaption>
+				  </td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+					<img src="../hw3/part3/CBspheres.png" width="400px"/>
+					<figcaption>CBspheres_lambertian.dae (Regular Render)</figcaption>
+				</td>
+				<td style="text-align: center;">
+					<img src="../hw3/part5/image30.png" width="400px"/>
+					<figcaption>CBspheres_lambertian.dae (Sample Rate)</figcaption>
+				</td>
+			  </tr>
+			</table>
+			<br>
+		</div>
+	</div>
+
+		</body>
 </html>
