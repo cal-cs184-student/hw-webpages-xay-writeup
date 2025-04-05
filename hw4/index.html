@@ -145,27 +145,36 @@
 			</td>
 		</div>
 		<h2>Part 3: Handling collisions with other objects</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
+		For sphere collision handling, I implemented a method that detects when a point mass penetrates a sphere and corrects its position. The approach begins by calculating the vector from the sphere's origin to the point mass and determining its distance. If this distance is less than the sphere's radius and the point is not pinned, a collision has occurred. The handler first calculates a correction vector that pushes the point mass to the sphere's surface along the radial direction. This is achieved by finding the unit direction vector and scaling it by the difference between the radius and the current distance. For friction, the implementation analyzes the point's previous position relative to the sphere center, projects it onto the sphere's surface, and calculates a friction correction. The final position combines both the normal correction and friction effects, ensuring physically plausible behavior when cloth interacts with spherical objects.
+		<br><br>
+		For plane collision handling, I implemented an approach that detects when a point mass crosses to the "inside" of a plane and corrects its position accordingly. The method calculates the signed distance from the point mass to the plane using the dot product between the point-to-plane vector and the plane's normal. A negative signed distance indicates that the point has penetrated the plane. When penetration is detected, the implementation projects the point mass back onto the plane by calculating the correct position on the plane's surface. From this projected point, a correction vector is computed between the point's last position and this projected point. This correction is scaled by (1-friction) to account for the friction effect of the plane material. The result is a physically plausible interaction where the cloth appears to slide realistically when contacting planar surfaces, with the friction parameter controlling how "sticky" or "slippery" the plane appears.
+		<br><br>
+		As you can see, the smaller the coefficient of the spring is, the more the cloth will dangle from the sphere. If ks is large, the internal force from the springs will hold the cloth from dangling more.
+		<br><br>
+		<table style="width: 100%; text-align: center; border-collapse: collapse; border: 1px solid black;">
+			<tr style="border: 1px solid black;">
+				<th style="border: 1px solid black; padding: 2%;">ks</th>
+				<th style="border: 1px solid black; padding: 2%;">Images </th>
+			</tr>
+			<tr style="border: 1px solid black;">
+				<td style="border: 1px solid black; padding: 2px;">500</td>
+				<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part4/500.png" width="500px"/></td>
+			</tr>
+			<tr style="border: 1px solid black;">
+				<td style="border: 1px solid black; padding: 2px;">5000</td>
+				<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part4/5000.png" width="500px"/></td>
+			</tr>
+			<tr style="border: 1px solid black;">
+				<td style="border: 1px solid black; padding: 2px;">50,000</td>
+				<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part4/50000.png" width="500px"/></td>
+			</tr>
+		</table>
 		<h2>Part 4: Handling self-collisions</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 		<h2>Part 5: Shaders</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-		<h2>(Optional) Part 6: Extra Credit - Additional cloth simulation features!</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-		
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
-			</li>
-		</ul>
 		</div>
 	</body>
 </html>
