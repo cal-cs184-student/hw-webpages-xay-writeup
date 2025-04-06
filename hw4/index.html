@@ -40,7 +40,6 @@
 		
 		<figure>
 			<img src="clothsim.png" alt="Cloth draped over sphere" style="width:70%"/>
-			<figcaption>You can add images with captions!</figcaption>
 		</figure>
 
 		<!--
@@ -48,8 +47,7 @@
 		-->
 
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
-
+		This assignment focuses on implementing a physically-based cloth simulation system that models fabric behavior through interconnected point masses and springs. The assignment requires building a grid of point masses arranged in either horizontal or vertical orientation, connected by three types of springs: structural springs between immediate neighbors, shearing springs between diagonal neighbors, and bending springs between points two steps away. We have to  implement physics-based simulation including spring forces, external forces like gravity and wind, and collision detection and response. The cloth's appearance is rendered using various shader programs (Phong, Mirror, Texture, Bump, and Displacement) to visualize different material properties. Through this assignment, 
 		<h2>Part 1: Masses and springs</h2>
 		In this part of the assignment, is the implementation of grid and mass where we try to achieve cloth representation with connection between the two. 
 		In this part we categorize the springs as <code>STRUCTURAL, SHEARING, and BENDING</code> by connecting different points.
