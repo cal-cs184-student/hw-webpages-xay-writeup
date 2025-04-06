@@ -214,8 +214,116 @@
 			
 		
 		<h2>Part 5: Shaders</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
+		In this part we implement a Shader programs, they are GPU-based code that render 3D graphics. Vertex shaders transform 3D points and pass data like positions and normals to fragment shaders, which calculate the final color for each pixel using lighting models and textures.
+		<br><br>
+		In The Blinn-Phong shading model we used lighting model that simulates how light interacts with surfaces by breaking it down into three components. First is the ambient component which represents indirect light that bounces around a scene, providing a base level of illumination even to areas not directly lit. The diffuse component simulates light scattering evenly in all directions when hitting a rough surface, with brightness dependent on the angle between the surface normal and light direction (n·l). The specular component creates highlights on shiny surfaces by measuring how close the viewing angle is to the perfect reflection angle, approximated using the half-vector between the view and light directions (n·h). Each component is scaled by corresponding material coefficients (ka, kd, ks) that control the surface's reflective properties. When combined, these components create realistic lighting that can represent materials ranging from matte clay to polished metal.
+		<br><br>
+		In OpenGL, a .vert  file contains vertex shader code written in (OpenGL Shading Language), which then process each vertex of a 3D model individually and apply transforms to the input vertex according to camera angels. To create the screenshots below which demonstrate each component individually and then combined, we would need to modify your .frag shader to isolate each component. For the ambient-only version, set the diffuse and specular contributions to zero. For diffuse-only, set ambient and specular to zero. For specular-only, set ambient and diffuse to zero. Then for the full model, I combined all three components together as implemented in current shader. We can make these changes temporarily in .frag file and run the program to capture each screenshot.
+		<br><br>
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/phong.png" width="400px"/>
+				  <figcaption>Blinn-Phong model</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/diffuse.png" width="400px"/>
+				  <figcaption>Diffuse</figcaption>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/ambient.png" width="400px"/>
+				  <figcaption>Ambient</figcaption>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/specular.png" width="400px"/>
+				  <figcaption>Specular</figcaption>
+				</td>
+			  </tr>
+			</table>
 		</div>
+		<br><br>
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/texture.png" width="600px"/>
+				  <figcaption>Custom Texture</figcaption>
+				</td>
+			</table>
+		</div>
+		<br><br>
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/p5_bump.png" width="400px"/>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/p5_bump_coarse.png" width="400px"/>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/p5_bump_fine.png" width="400px"/>
+				</td>
+			  </tr>
+			</table>
+		</div>
+		<br><br>
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/p5_bump.png" width="400px"/>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/p5_bump_coarse.png" width="400px"/>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center; display: flex; justify-content: center;">
+				  <img src="../hw4/part5/p5_bump_fine.png" width="400px" style="margin: 0 auto;"/>
+				</td>
+			  </tr>
+			</table>
+		</div>
+		<br><br>
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/p5_displacement.png" width="400px"/>
+				</td>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/p5_displacement_coarse.png" width="400px"/>
+				</td>
+			  </tr>
+			  <tr>
+				<td style="text-align: center; display: flex; justify-content: center;">
+				  <img src="../hw4/part5/p5_displacement_fine.png" width="400px" style="margin: 0 auto;"/>
+				</td>
+			  </tr>
+			</table>
+		</div>
+		<br><br>
+		When the sphere’s mesh is coarse, displacement mapping performs poorly because the limited number of vertices can't accurately capture the abrupt height changes in the texture. There aren’t enough vertices to represent the height variation, especially at the texture's sharp transitions. However, in the bump render, the difference is much less noticeable. This is because the texture is mostly uniform, aside from the edges between bricks, allowing the renderer to effectively interpolate colors between vertices. If the texture were more detailed with frequent discontinuities, the performance gap between the coarse and fine meshes would become more significant.
+		<br><br>
+		<div class="image-grid">
+			<table style="width: 100%; text-align: center; border-collapse: collapse;">
+			  <tr>
+				<td style="text-align: center;">
+				  <img src="../hw4/part5/mirror2.png" width="600px"/>
+				  <figcaption>Mirror Shader Before</figcaption>
+				</td>
+				<td style="text-align: center;">
+					<img src="../hw4/part5/mirror.png" width="600px"/>
+					<figcaption>Mirror Shader After</figcaption>
+				  </td>
+			</table>
+		</div>
+	</div>
 	</body>
 </html>
