@@ -169,9 +169,50 @@
 				<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part4/50000.png" width="500px"/></td>
 			</tr>
 		</table>
+		<br>
+		<table style="width: 100%; margin: 0 auto; text-align: center;">
+			<tr >
+				<td style="text-align: center;"><img src="../hw4/part4/plane.png" width="600px"/></td>
+				<caption>plane.json</caption>
+			</tr>
+		</table>
 		<h2>Part 4: Handling self-collisions</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
+		First, I created a hash function that maps 3D positions to unique float values by dividing space into boxes of dimensions proportional to the cloth's physical properties. This function effectively groups nearby points into the same "bucket" for efficient collision checking. Next, I built a spatial map data structure by iterating through all point masses and placing them into appropriate buckets based on their hashed positions. The collision detection and resolution process then examines each point mass against potential collision candidates from the spatial map. When point masses are detected to be closer than twice the cloth thickness, a correction vector is calculated to push them apart to maintain proper separation. These individual correction vectors are averaged and scaled by the simulation steps factor to produce smooth, physically plausible movement while preventing cloth self-penetration. This spatial partitioning approach significantly improves performance by limiting collision checks to points that are potentially close enough to interact, rather than examining all possible point mass pairs, which would be computationally prohibitive for complex cloth simulations.
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table>
+				<tr>
+					<td><img src="../hw4/part3/Screenshot 2025-04-05 at 6.21.47 PM.png" width="600px"/></td>
+				</tr>
+			</table>
+		</div>
+		<br><br>
+		A higher ks or a lower density will cause less number of folds to appear since the cloth will tend to preserve its original shape, while a lower ks or a higher density will cause it to fold faster and in more number of folds.
+		<br><br>
+		<br><br>
+		<div style="display: flex; flex-direction: column; align-items: center;">
+			<table style="width: 150%; text-align: center; border-collapse: collapse; border: 1px solid black;">
+				<tr style="border: 1px solid black;">
+					<th style="border: 1px solid black; padding: 2%;">--- </th>
+					<th style="border: 1px solid black; padding: 2%;">Low </th>
+					<th style="border: 1px solid black; padding: 2%;">Default Setting</th>
+					<th style="border: 1px solid black; padding: 2%;">High</th>
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2%;">ks</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part3/p4_ks_low.gif" width="300px"/></td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part3/p4_reference.gif" width="300px"/></td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part3/p4_ks_high.gif" width="300px"/></td>
+					
+				</tr>
+				<tr style="border: 1px solid black;">
+					<td style="border: 1px solid black; padding: 2%;">Density</td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part3/p4_density_low.gif" width="300px"/></td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part3/p4_reference.gif" width="300px"/></td>
+					<td style="border: 1px solid black; padding: 2%;"><img src="../hw4/part3/p4_density_high.gif" width="300px"/></td>
+				</tr>
+			</table>
+			
+		
 		<h2>Part 5: Shaders</h2>
 		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
